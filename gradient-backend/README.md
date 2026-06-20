@@ -1,16 +1,16 @@
-# ⚡ Gradient: Online Judge & Programming Contest Platform Backend
+# ⚡ Gradient Backend (Go Microservices Grader Engine)
 
-[![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://golang.org)
 [![Gin Framework](https://img.shields.io/badge/Gin-v1.12-008080?style=for-the-badge&logo=go&logoColor=white)](https://gin-gonic.github.io/gin/)
 [![gRPC](https://img.shields.io/badge/gRPC-v1.81-blue?style=for-the-badge&logo=grpc&logoColor=white)](https://grpc.io)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
 
-Gradient คือระบบเบื้องหลัง (Backend Platform) ที่ออกแบบมาสำหรับระบบทำโจทย์เขียนโปรแกรมและการแข่งขันเขียนโค้ด (Online Programming Contest Platform) พัฒนาด้วยภาษา **Go** ภายใต้โครงสร้างแบบ **Microservices** ที่มีประสิทธิภาพและปลอดภัยสูง
+**Gradient Backend** เป็นระบบหลังบ้านประสานงานและประมวลผลคำตอบ (Online Judge System) ออกแบบด้วยโครงสร้าง **Go Microservices** แบ่งแยกการจัดการ API ข้อมูลทั่วไปและการตรวจผลลัพธ์การเขียนโปรแกรมออกจากกันด้วยสัญญาสื่อสาร **gRPC** เพื่อการประมวลผลที่ปลอดภัย รวดเร็ว และรองรับโหลดจำนวนมาก
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ สถาปัตยกรรมการทำงาน (System Architecture)
 
 ```mermaid
 graph TD
@@ -20,167 +20,130 @@ graph TD
     
     subgraph Grader Engine
         Grader -->|3. Pull Language Profile| Config["Language Profiles (YAML)"]
-        Grader -->|4. Manage Containers| Docker[Host Docker Daemon]
+        Grader -->|4. Orchestrate Containers| Docker[Host Docker Daemon]
         Docker -->|5. Run Isolated Sandbox| Sandbox["Docker Container (Isolated Sandbox)"]
     end
     
     Grader -->|6. Update Status & Metrics| DB
 ```
 
-ระบบแบ่งการทำงานออกเป็น 2 เซอร์วิสหลัก:
-1. **CMS Service (HTTP REST API)**: ดูแลระบบสมาชิก (Authentication), การจัดการโจทย์ (Problems), ชุดทดสอบตัวอย่าง (Sample Testcases) และการจัดการแข่งขัน (Contests)
-2. **Grader Service (gRPC Server)**: ทำหน้าที่ตรวจซอร์สโค้ดในระบบ Sandbox ที่แยกสภาพแวดล้อมออกจากระบบหลัก (Isolated Docker Container Sandbox) ป้องกันโค้ดอันตราย (Malicious Code Execution) พร้อมจำกัดทรัพยากร (Resource Limits) ทั้ง Memory Limit และ Time Limit (Time Limit Exceeded - TLE)
+ระบบแบ่งออกเป็น 2 เซอร์วิสหลัก:
+1.  **CMS Service (HTTP REST API)**: ดูแลการลงทะเบียนสมาชิก (Authentication), ข้อมูลบัญชีผู้ใช้, การบันทึกโจทย์ (Problems) และความสัมพันธ์ของโจทย์, จัดการสนามแข่งโปรแกรม (Contests) และการส่งคำตอบ (Submissions)
+2.  **Grader Service (gRPC Server)**: ทำหน้าที่รันโค้ดผู้ใช้งานจริงในสภาพแวดล้อมที่จำกัดขอบเขต (Docker Sandbox) ป้องกันโค้ดคุกคามระบบ (Malicious Code Execution) พร้อมควบคุมปริมาณการเข้าใช้งานระบบ CPU และจำกัดทรัพยากรหน่วยความจำ (Memory Limits) และเวลาทำงาน (Timeout Limits)
 
 ---
 
-## 📁 Project Directory Structure
+## 📁 โครงสร้างโปรเจกต์ (Project Directory Structure)
 
 ```text
 gradient-backend/
 ├── apps/
-│   ├── cms-service/            # เซอร์วิสหลักที่ดูแลจัดการผู้ใช้งานและ API
+│   ├── cms-service/            # เซอร์วิสหลักที่คอยบริการข้อมูลให้ลูกค้าผ่าน HTTP REST API
 │   │   ├── client/             # ตัวเชื่อมต่อ gRPC Client ไปหา Grader Service
-│   │   ├── config/             # จัดการโหลด Environment Variables
-│   │   ├── handler/            # API Controllers แยกตาม Domain (auth, problem, contest, submission)
-│   │   ├── repository/         # PostgreSQL DB Access แยกตาม Domain (auth, problem, contest, submission)
+│   │   ├── config/             # โหลดและจัดการการอ่านค่าสภาพแวดล้อม (.env)
+│   │   ├── handler/            # API Controllers ควบคุม logic (auth, problem, contest, submission)
+│   │   ├── repository/         # ติดต่อฐานข้อมูล PostgreSQL ผ่าน GORM (CRUD Operation)
 │   │   ├── router/             # ตัวจัดการเส้นทางแยกตามโมดูล (Auth, Problem, Contest, Sub)
-│   │   └── main.go             # จุดเริ่มต้นรัน CMS Service
+│   │   └── main.go             # จุดเริ่มต้นเปิดเซิร์ฟเวอร์หลักของ CMS Service
 │   │
-│   ├── grader-service/         # เซอร์วิสตรวจโค้ด (Grader Engine)
+│   ├── grader-service/         # เซอร์วิสตรวจผลซอร์สโค้ด (Grader Engine)
 │   │   ├── config/             # โหลดค่าคอนฟิกและ Sandbox Profiles (YAML)
-│   │   ├── engine/             # ระบบรันซอร์สโค้ดใน Docker Sandbox
-│   │   ├── handler/            # gRPC Service Handler
-│   │   ├── repository/         # อัปเดตผลลัพธ์การตรวจ (Status & Metrics) กลับลงฐานข้อมูล
-│   │   └── main.go             # จุดเริ่มต้นรัน Grader Service
+│   │   ├── engine/             # ส่วนรันซอร์สโค้ดและควบคุม Docker Sandbox
+│   │   ├── handler/            # gRPC Service Handler (Implement proto interface)
+│   │   ├── repository/         # อัปเดตผลลัพธ์การตรวจและสถิติกลับลงฐานข้อมูล PostgreSQL
+│   │   └── main.go             # จุดเริ่มต้นเปิด Grader gRPC Server
 │   │
-│   └── shared/                 # แพ็คเกจและโมเดลที่ใช้ร่วมกัน
-│       ├── model/              # โครงสร้างตารางและ Database Models
-│       └── proto/              # Grader Protobuf Definition และโค้ดภาษา Go ที่ถูกเจเนอเรต
+│   └── shared/                 # แพ็คเกจและโมเดลที่ใช้ร่วมกันของ Monorepo
+│       ├── model/              # โครงสร้างตารางและ Database Entity Models
+│       └── proto/              # สัญญาบริการ Grader Protobuf (.proto) และ Go code generator
 │
-├── database/                   # โฟลเดอร์เก็บ SQL Schema
-│   └── schema.sql              # สคริปต์สำหรับนำเข้าโครงสร้างตารางข้อมูล
-├── .env                        # คอนฟิกูเรชันสภาวะแวดล้อมสำหรับรันภายในเครื่อง
-├── docker-compose.yml          # ไฟล์รวมบริการรันผ่าน Docker Compose
-└── README.md                   # เอกสารคู่มือใช้งาน
+├── database/                   # โฟลเดอร์สำหรับจัดการฐานข้อมูล
+│   └── schema.sql              # ไฟล์สร้างโครงสร้างตารางเริ่มต้นทั้งหมด (PostgreSQL Table Init)
+├── .env                        # ไฟล์สภาพแวดล้อมการทำงานของเครื่องท้องถิ่น
+├── docker-compose.yml          # การตั้งค่าสำหรับเปิดรันระบบทั้งหมดผ่าน Docker Compose
+└── README.md                   # ไฟล์เอกสารของฝั่ง Backend
 ```
 
 ---
 
-## 🛠️ Prerequisites & Setup
+## 🛡️ รายละเอียดและเทคนิคของระบบ Sandbox
 
-ก่อนเริ่มต้นใช้งาน กรุณาตรวจสอบและเตรียมโปรแกรมเหล่านี้ในเครื่องของคุณ:
+ระบบตรวจข้อสอบการเขียนโปรแกรมของ **Gradient** มีการป้องกันความปลอดภัยระดับสูงเพื่อรับมือกับโค้ดอันตราย:
+*   **Tar Archive Transmission**: Grader Service จะทำการแพ็คไฟล์ซอร์สโค้ดของผู้ใช้ใส่ใน `.tar` Buffer แล้วโอนย้ายข้อมูลผ่าน Docker API `CopyToContainer` โดยตรง แทนการเขียนไฟล์ผ่าน stdin redirection (`cat << 'EOF'`) เพื่อปิดโอกาสการเจาะระบบ (Shell Code Escape/Injection) และป้องกันปัญหาข้อมูลตัวอักษรตกหล่น
+*   **Docker Container Sandbox Isolation**: ทุกๆ การส่งโค้ดเข้ามาตรวจ Grader Service จะสร้าง Container ของภาษานั้นขึ้นมาใหม่โดยดึง Profile จาก [sandbox_profiles.yaml](file:///Users/kong/Documents/Project/gradient/gradient-backend/apps/grader-service/config/sandbox_profiles.yaml)
+*   **Strict Resource Constraints**: จำกัดหน่วยความจำและ CPU Core ของ Container ป้องกันลูปนรกทำงานตลอดเวลา โดยหากโปรแกรมทำงานเกินขีดจำกัด Grader Engine จะทำการกวาดล้างและปิด Container ทันที ส่งผลแจ้งเตือนเป็น `TLE` (Time Limit Exceeded) หรือ `MLE` (Memory Limit Exceeded)
 
-* **Go (v1.26+)** 
-* **Docker / Docker Desktop** (จำเป็นต้องรันเพื่อให้ระบบ Grader สามารถสร้าง Sandbox Container ได้)
-* **PostgreSQL (v15+)** (หากเลือกรันแบบโลคัลพัฒนา)
+---
 
-### 1. การนำเข้า Database Schema
+## 📡 รายการ API และเส้นทางการให้บริการ (Detailed API Routes)
 
-หากคุณติดตั้งฐานข้อมูลเอง ให้สร้างฐานข้อมูลชื่อ `gradient` แล้วรันสคริปต์ SQL นี้:
+ในการสื่อสารกับ API ส่วนใหญ่ ต้องแนบ JWT Token มากับ Header: `Authorization: Bearer <your-jwt-token>`
 
+| HTTP Route | HTTP Method | Access Role | Description |
+| :--- | :---: | :---: | :--- |
+| **Authentication** | | | |
+| `/api/auth/register` | `POST` | Public | สมัครบัญชีสมาชิกใหม่ |
+| `/api/auth/login` | `POST` | Public | ยืนยันตัวตนเพื่อรับ JWT Token |
+| `/api/auth/me` | `GET` | All Roles | ตรวจสอบข้อมูลบัญชีที่เข้าสู่ระบบปัจจุบัน |
+| **Problems Management** | | | |
+| `/api/problems` | `GET` | All Roles | ดูโจทย์ทั้งหมด (Student เห็นเฉพาะโจทย์ที่ Publish แล้ว) |
+| `/api/problems/:id` | `GET` | All Roles | ดูข้อมูลคำอธิบายโจทย์และตัวอย่าง |
+| `/api/problems` | `POST` | Teacher / Admin | สร้างโจทย์ใหม่ |
+| `/api/problems/:id` | `PUT` | Teacher / Admin | อัปเดตข้อมูลและรายละเอียดโจทย์ |
+| `/api/problems/:id` | `DELETE` | Teacher / Admin | ลบโจทย์ออกจากระบบถาวร |
+| **Testcases Management** | | | |
+| `/api/problems/:id/testcases` | `GET` | All Roles | ดูรายการชุดทดสอบ (Student เห็นเฉพาะชุดตัวอย่าง) |
+| `/api/problems/:id/testcases` | `POST` | Teacher / Admin | แนบ/บันทึกข้อมูลชุดทดสอบการทำงาน |
+| `/api/problems/:id/testcases/:tcId` | `DELETE` | Teacher / Admin | ลบชุดทดสอบเดี่ยวของโจทย์ออก |
+| **Contests Management** | | | |
+| `/api/contests` | `GET` | All Roles | ดูรายการแข่งขันทั้งหมดที่มีในระบบ |
+| `/api/contests/:id` | `GET` | All Roles | แสดงข้อมูลและกติการายละเอียดการแข่งขัน |
+| `/api/contests` | `POST` | Teacher / Admin | สร้างงานประกวดแข่งขันข้อเขียนใหม่ |
+| `/api/contests/:id` | `PUT` | Teacher / Admin | แก้ไขปรับปรุงข้อมูลห้องการแข่งขัน |
+| `/api/contests/:id` | `DELETE` | Teacher / Admin | ลบงานแข่งขันออกจากระบบ |
+| `/api/contests/:id/join` | `POST` | Student | กดสมัครเข้าร่วมการแข่ง |
+| `/api/contests/:id/problems` | `GET` | All Roles | ดูโจทย์ทั้งหมดที่ใช้แข่งในแมตช์นี้ |
+| `/api/contests/:id/problems` | `POST` | Teacher / Admin | บรรจุโจทย์ข้อสอบเข้าห้องแข่ง |
+| **Submissions Management** | | | |
+| `/api/submissions` | `POST` | Student | ส่งโค้ดขึ้นเพื่อรอการรันประเมินผลตรวจ |
+| `/api/submissions/:id` | `GET` | All Roles | ตรวจเช็คสถานะและคะแนนการรันตรวจ |
+| `/api/submissions` | `GET` | All Roles | ดูรายการบันทึกการส่งโค้ดทั้งหมด (กรองข้อมูลได้) |
+
+---
+
+## 🚀 ขั้นตอนการเปิดเซิร์ฟเวอร์พัฒนา (Go Development & Run)
+
+### 1. ตั้งค่าฐานข้อมูล (PostgreSQL Local)
+ตรวจสอบให้แน่ใจว่าติดตั้งฐานข้อมูลไว้แล้ว สร้าง Database ชื่อ `gradient` จากนั้นให้ทำนำเข้าตาราง:
 ```bash
-psql -u username -d gradient -f database/schema.sql
+psql -U postgres -d gradient -f database/schema.sql
 ```
 
-### 2. ตั้งค่าสภาพแวดล้อม (Environment Config)
-
-คัดลอกไฟล์ `.env.example` เพื่อสร้างไฟล์ `.env` สำหรับกำหนดการตั้งค่า:
-
+### 2. ตั้งไฟล์ .env
 ```bash
 cp .env.example .env
 ```
-
-จากนั้นแก้ไขรายละเอียดในไฟล์ `.env` ให้ตรงกับระบบฐานข้อมูลของคุณ เช่น `POSTGRES_USER`, `POSTGRES_PASSWORD` และกำหนด `JWT_SECRET`
-
----
-
-## 🚀 How to Run
-
-> [!IMPORTANT]
-> **ระบบ Grader จำเป็นต้องมี Docker Daemon เปิดใช้งานอยู่เสมอ** ไม่ว่าจะเลือกรันผ่าน Docker Compose หรือรันบนเครื่องปกติ (Local)
-
-### วิธีที่ 1: รันด้วย Docker Compose (แนะนำและรวดเร็วที่สุด)
-
-วิธีนี้จะเริ่มการทำงานของ PostgreSQL, Grader Service, และ CMS Service พร้อมสร้างฐานข้อมูลและตารางเริ่มต้นให้อัตโนมัติ:
-
-```bash
-docker-compose up --build
+เปิดไฟล์และระบุรหัสผ่านฐานข้อมูลให้ตรงกับเครื่องของคุณ เช่น:
+```env
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_NAME=gradient
+JWT_SECRET=super_secret_jwt_key
+GRADER_SERVICE_ADDR=localhost:8081
 ```
 
-* **CMS HTTP API** จะพร้อมใช้งานที่ `http://localhost:8080`
-* **Grader gRPC Service** จะทำงานอยู่เบื้องหลังที่พอร์ต `localhost:8081`
-* **PostgreSQL** จะเก็บข้อมูลและ Import Schema เริ่มจาก [database/schema.sql](file:///Users/kong/Documents/Project/gradient-backend/database/schema.sql) ลงในฐานข้อมูลให้อัตโนมัติ
-
----
-
-### วิธีที่ 2: รันแบบพัฒนาทั่วไป (Local Go Development)
-
-**1. รัน Grader Service (gRPC)**
-เปิด Terminal ที่ 1 แล้วรันคำสั่ง:
-
+### 3. รัน Grader Service (gRPC)
+ระบบ Grader จำเป็นต้องเรียกใช้ Docker เพื่อดึงอิมเมจของภาษาโปรแกรมมาสร้าง Sandbox:
 ```bash
 go run apps/grader-service/main.go
 ```
 
-**2. รัน CMS Service (HTTP REST API)**
-เปิด Terminal ที่ 2 แล้วรันคำสั่ง:
-
+### 4. รัน CMS Service (REST HTTP API)
 ```bash
 go run apps/cms-service/main.go
 ```
-
----
-
-## 📡 API Endpoints Summary
-
-ทุก ๆ เส้นทาง API (ยกเว้น Register และ Login) จำเป็นต้องส่ง JWT Token ใน Header รูปแบบ: `Authorization: Bearer <your-jwt-token>`
-
-| Route | Method | Access Role | Description |
-|---|---|---|---|
-| **`/api/auth/register`** | `POST` | Public | สมัครสมาชิกผู้ใช้งานใหม่ |
-| **`/api/auth/login`** | `POST` | Public | เข้าสู่ระบบเพื่อรับ JWT Token |
-| **`/api/auth/me`** | `GET` | Student / Teacher / Admin | ดูข้อมูลผู้ใช้งานปัจจุบันที่ล็อกอินอยู่ |
-| **`/api/problems`** | `GET` | Student / Teacher / Admin | แสดงรายการโจทย์ (นักเรียนจะเห็นเฉพาะข้อที่เผยแพร่แล้ว) |
-| **`/api/problems/:id`** | `GET` | Student / Teacher / Admin | แสดงรายละเอียดข้อมูลโจทย์และข้อมูลตัวอย่าง |
-| **`/api/problems/:id/testcases`**| `GET` | Student / Teacher / Admin | ดูชุดทดสอบ (นักเรียนจะเห็นเฉพาะชุดทดสอบตัวอย่าง) |
-| **`/api/problems`** | `POST` | Teacher / Admin | สร้างโจทย์ใหม่ |
-| **`/api/problems/:id/testcases`**| `POST` | Teacher / Admin | เพิ่มชุดทดสอบ (Testcase) สำหรับตรวจคำตอบ |
-| **`/api/contests`** | `GET` | Student / Teacher / Admin | แสดงการแข่งขันทั้งหมด |
-| **`/api/contests/:id`** | `GET` | Student / Teacher / Admin | แสดงข้อมูลรายละเอียดการแข่งขัน |
-| **`/api/contests/:id/join`** | `POST` | Student | สมัครและเข้าร่วมการแข่งขัน |
-| **`/api/contests/:id/problems`** | `GET` | Student / Teacher / Admin | ดูรายการโจทย์ในห้องแข่งขัน |
-| **`/api/contests`** | `POST` | Teacher / Admin | สร้างการแข่งขันใหม่ |
-| **`/api/contests/:id/problems`** | `POST` | Teacher / Admin | เพิ่มโจทย์เข้าสู่การแข่งขัน |
-| **`/api/submissions`** | `POST` | Student | ส่งซอร์สโค้ดเพื่อเริ่มตรวจคำตอบ |
-| **`/api/submissions/:id`** | `GET` | Student / Teacher / Admin | ติดตามและดูผลลัพธ์การตรวจ |
-| **`/api/submissions`** | `GET` | Student / Teacher / Admin | ดูรายการส่งโค้ดทั้งหมด (สามารถฟิลเตอร์ด้วย Query parameters) |
-
----
-
-## 🛡️ Sandbox Profiles Config
-
-คุณสามารถกำหนด Docker Image และคำสั่งที่ใช้ในการคอมไพล์/รันโค้ดเขียนโปรแกรมได้ในไฟล์ [config/sandbox_profiles.yaml](file:///Users/kong/Documents/Project/gradient-backend/apps/grader-service/config/sandbox_profiles.yaml) เช่น:
-
-```yaml
-languages:
-  cpp:
-    image: gcc:13-alpine
-    compile_cmd: g++ -O3 solution.cpp -o solution
-    run_cmd: ./solution
-  python:
-    image: python:3.11-alpine
-    compile_cmd: python3 -m py_compile solution.py
-    run_cmd: python3 solution.py
-  go:
-    image: golang:1.21-alpine
-    compile_cmd: go build -o solution solution.go
-    run_cmd: ./solution
-    .
-    .
-    .
-  javascript:
-    image: "node:20-alpine"
-    compile_cmd: "node --check solution.js"
-    run_cmd: "node solution.js"
-    
-```
+*   **CMS Endpoint** จะทำงานที่ `http://localhost:8080`
+*   **Grader Endpoint** จะทำหน้าที่ให้บริการ gRPC ตรวจโค้ดที่พอร์ต `:8081`
+*   สามารถสั่งทดสอบการคอมไพล์โปรเจกต์ด้วยคำสั่ง: `go build ./...`
