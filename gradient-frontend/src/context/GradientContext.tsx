@@ -65,6 +65,10 @@ interface GradientContextType {
   readonly setRole: (role: UserRole) => void;
   readonly username: string;
   readonly setUsername: (name: string) => void;
+  readonly token: string | null;
+  readonly login: (username: string, password: string) => Promise<void>;
+  readonly register: (username: string, email: string, password: string, displayName: string, role: string) => Promise<void>;
+  readonly logout: () => void;
   readonly problems: readonly Problem[];
   readonly testcases: readonly Testcase[];
   readonly contests: readonly Contest[];
@@ -231,7 +235,6 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
       for (const contest of mappedContests) {
         try {
           const contestProbs = await apiFetch(`/api/contests/${contest.id}/problems`, tokenToUse);
-          // Get problem IDs
           (contest as any).problems = contestProbs.map((p: any) => p.ID);
         } catch (e) {
           console.error('Failed to load contest problems', e);
@@ -266,36 +269,72 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
     }
   };
 
-  const setRole = async (newRole: UserRole): Promise<void> => {
-    try {
-      const usernameToUse = newRole === 'admin' ? 'admin_master' : 'user_student';
-      const passwordToUse = newRole === 'admin' ? 'admin123' : 'student123';
-      
-      const res = await apiFetch('/api/auth/login', null, {
-        method: 'POST',
-        body: JSON.stringify({
-          username: usernameToUse,
-          password: passwordToUse
-        })
-      });
-      
-      const tokenVal = res.token;
-      const userVal = res.user;
-      
-      localStorage.setItem('gradient_token', tokenVal);
-      localStorage.setItem('gradient_role', newRole);
-      localStorage.setItem('gradient_username', userVal.username);
-      localStorage.setItem('gradient_user_id', userVal.id);
-      
-      setRoleState(newRole);
-      setUsernameState(userVal.username);
-      setUserIdState(userVal.id);
-      setTokenState(tokenVal);
-      
-      await initData(tokenVal, userVal.id, userVal.username, newRole);
-    } catch (e) {
-      console.error('Failed to log in to backend:', e);
-    }
+  const login = async (userParam: string, passwordParam: string): Promise<void> => {
+    const res = await apiFetch('/api/auth/login', null, {
+      method: 'POST',
+      body: JSON.stringify({
+        username: userParam,
+        password: passwordParam
+      })
+    });
+    
+    const tokenVal = res.token;
+    const userVal = res.user;
+    const resolvedRole: UserRole = userVal.role === 'admin' || userVal.role === 'teacher' ? 'admin' : 'student';
+    
+    localStorage.setItem('gradient_token', tokenVal);
+    localStorage.setItem('gradient_role', resolvedRole);
+    localStorage.setItem('gradient_username', userVal.username);
+    localStorage.setItem('gradient_user_id', userVal.id);
+    
+    setRoleState(resolvedRole);
+    setUsernameState(userVal.username);
+    setUserIdState(userVal.id);
+    setTokenState(tokenVal);
+    
+    await initData(tokenVal, userVal.id, userVal.username, resolvedRole);
+  };
+
+  const register = async (
+    userParam: string, 
+    emailParam: string, 
+    passwordParam: string, 
+    displayNameParam: string, 
+    roleParam: string
+  ): Promise<void> => {
+    // Map visual 'admin' or 'student' values to Go backend role requirements
+    const backendRole = roleParam === 'admin' ? 'admin' : 'student';
+    await apiFetch('/api/auth/register', null, {
+      method: 'POST',
+      body: JSON.stringify({
+        username: userParam,
+        email: emailParam,
+        password: passwordParam,
+        display_name: displayNameParam,
+        role: backendRole
+      })
+    });
+  };
+
+  const logout = (): void => {
+    localStorage.removeItem('gradient_token');
+    localStorage.removeItem('gradient_role');
+    localStorage.removeItem('gradient_username');
+    localStorage.removeItem('gradient_user_id');
+    setTokenState(null);
+    setRoleState('student');
+    setUsernameState('user_student');
+    setUserIdState('u4');
+    setProblems([]);
+    setTestcases([]);
+    setContests([]);
+    setSubmissions([]);
+  };
+
+  const setRole = (newRole: UserRole): void => {
+    // Left for direct theme/preview role switching
+    setRoleState(newRole);
+    localStorage.setItem('gradient_role', newRole);
   };
 
   const setUsername = (name: string): void => {
@@ -315,8 +354,6 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
       setUsernameState(savedUsername);
       setUserIdState(savedUserId);
       initData(savedToken, savedUserId, savedUsername, savedRole);
-    } else {
-      setRole(savedRole);
     }
   }, []);
 
@@ -398,18 +435,15 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
   };
 
   const updateProblem = (id: string, updates: Partial<Problem>): void => {
-    // GORM backend doesn't support PATCH problem yet, fallback to local state update
     setProblems(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
   };
 
   const deleteProblem = (id: string): void => {
-    // GORM backend doesn't support DELETE problem yet, fallback to local state update
     setProblems(prev => prev.filter(p => p.id !== id));
     setTestcases(prev => prev.filter(t => t.problemId !== id));
   };
 
   const publishProblem = (id: string, isPublished: boolean): void => {
-    // GORM backend doesn't support PATCH problem yet, fallback to local state update
     updateProblem(id, { isPublished });
   };
 
@@ -445,7 +479,6 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
   };
 
   const deleteTestcase = (id: string): void => {
-    // GORM backend doesn't support DELETE testcase yet, fallback to local state update
     setTestcases(prev => prev.filter(t => t.id !== id));
   };
 
@@ -588,7 +621,6 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
   };
 
   const regradeSubmission = (submissionId: string): void => {
-    // Regrade fallback - re-submit the code
     const sub = submissions.find(s => s.id === submissionId);
     if (!sub) return;
     submitCode(sub.problemId, sub.language, sub.sourceCode);
@@ -600,6 +632,10 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
       setRole,
       username,
       setUsername,
+      token,
+      login,
+      register,
+      logout,
       problems,
       testcases,
       contests,
