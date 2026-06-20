@@ -85,145 +85,32 @@ interface GradientContextType {
 
 const GradientContext = createContext<GradientContextType | undefined>(undefined);
 
-// Seed Data
-const DEFAULT_PROBLEMS: Problem[] = [
-  {
-    id: 'p1',
-    title: 'Two Sum',
-    slug: 'two-sum',
-    description: 'Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.\n\nYou can return the answer in any order.',
-    inputFormat: 'The first line contains an integer N (the size of array) and target.\nThe second line contains N integers separated by space representing the array elements.',
-    outputFormat: 'Print the two indices (0-indexed) separated by space, in ascending order.',
-    constraints: '2 <= nums.length <= 10^4\n-10^9 <= nums[i] <= 10^9\n-10^9 <= target <= 10^9',
-    difficulty: 'Easy',
-    timeoutMs: 1000,
-    memoryLimitMb: 256,
-    score: 100,
-    isPublished: true,
-    createdBy: 'admin_master',
-    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-    tags: ['Array', 'Hash Table']
-  },
-  {
-    id: 'p2',
-    title: 'Valid Parentheses',
-    slug: 'valid-parentheses',
-    description: 'Given a string `s` containing just the characters `(`, `)`, `{`, `}`, `[` and `]`, determine if the input string is valid.\n\nAn input string is valid if:\n1. Open brackets must be closed by the same type of brackets.\n2. Open brackets must be closed in the correct order.\n3. Every close bracket has a corresponding open bracket of the same type.',
-    inputFormat: 'A single line containing the string `s`.',
-    outputFormat: 'Print `true` if the string is valid, or `false` otherwise.',
-    constraints: '1 <= s.length <= 10^4\ns consists of parentheses characters only.',
-    difficulty: 'Easy',
-    timeoutMs: 1000,
-    memoryLimitMb: 256,
-    score: 100,
-    isPublished: true,
-    createdBy: 'admin_master',
-    createdAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
-    tags: ['String', 'Stack']
-  },
-  {
-    id: 'p3',
-    title: 'Longest Substring Without Repeating Characters',
-    slug: 'longest-substring-without-repeating',
-    description: 'Given a string `s`, find the length of the longest substring without repeating characters.\n\nFor example, the longest substring without repeating characters for "abcabcbb" is "abc", which has a length of 3.',
-    inputFormat: 'A single line containing the string `s`. Note that the string may contain spaces.',
-    outputFormat: 'Print a single integer representing the length of the longest substring without repeating characters.',
-    constraints: '0 <= s.length <= 5 * 10^4\ns consists of English letters, digits, symbols and spaces.',
-    difficulty: 'Medium',
-    timeoutMs: 1500,
-    memoryLimitMb: 256,
-    score: 200,
-    isPublished: true,
-    createdBy: 'teacher_joy',
-    createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-    tags: ['String', 'Sliding Window']
-  },
-  {
-    id: 'p4',
-    title: 'Optimal Path Finder (Dijkstra)',
-    slug: 'optimal-path-finder',
-    description: 'You are given a weighted directed graph of N nodes (numbered 1 to N) and M edges. Find the shortest path distance from node 1 to node N.\n\nIf node N is unreachable from node 1, output -1.',
-    inputFormat: 'The first line contains N and M (nodes and edges).\nThe next M lines each contain three integers u, v, and w, representing a directed edge from u to v with weight w.',
-    outputFormat: 'Print a single integer representing the shortest path distance, or -1 if unreachable.',
-    constraints: '1 <= N <= 10^5\n1 <= M <= 2 * 10^5\n1 <= u, v <= N\n1 <= w <= 10^6',
-    difficulty: 'Hard',
-    timeoutMs: 2000,
-    memoryLimitMb: 512,
-    score: 300,
-    isPublished: false,
-    createdBy: 'teacher_joy',
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    tags: ['Graph', 'Shortest Path']
+// API fetch wrapper with token header
+async function apiFetch(url: string, token: string | null, options: RequestInit = {}): Promise<any> {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+  const res = await fetch(url, { ...options, headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: `HTTP error ${res.status}` }));
+    throw new Error(err.error || `HTTP error ${res.status}`);
   }
-];
+  return res.json();
+}
 
-const DEFAULT_TESTCASES: Testcase[] = [
-  { id: 't1', problemId: 'p1', orderIndex: 1, input: '4 9\n2 7 11 15', expectedOutput: '0 1', isSample: true, score: 50 },
-  { id: 't2', problemId: 'p1', orderIndex: 2, input: '3 6\n3 2 4', expectedOutput: '1 2', isSample: true, score: 50 },
-  { id: 't3', problemId: 'p2', orderIndex: 1, input: '()', expectedOutput: 'true', isSample: true, score: 30 },
-  { id: 't4', problemId: 'p2', orderIndex: 2, input: '()[]{}', expectedOutput: 'true', isSample: true, score: 35 },
-  { id: 't5', problemId: 'p2', orderIndex: 3, input: '(]', expectedOutput: 'false', isSample: false, score: 35 },
-  { id: 't6', problemId: 'p3', orderIndex: 1, input: 'abcabcbb', expectedOutput: '3', isSample: true, score: 100 },
-  { id: 't7', problemId: 'p3', orderIndex: 2, input: 'bbbbb', expectedOutput: '1', isSample: false, score: 100 },
-  { id: 't8', problemId: 'p4', orderIndex: 1, input: '4 5\n1 2 5\n1 3 2\n3 2 1\n2 4 3\n3 4 8', expectedOutput: '6', isSample: true, score: 150 },
-  { id: 't9', problemId: 'p4', orderIndex: 2, input: '3 1\n1 2 10', expectedOutput: '-1', isSample: false, score: 150 }
-];
-
-const DEFAULT_CONTESTS: Contest[] = [
-  {
-    id: 'c1',
-    title: 'Gradient Beta Coding Contest',
-    description: 'Welcome to the inaugural Gradient platform contest! Solve 3 algorithmic tasks of varying difficulty. Code evaluation is dynamic and sandboxed in our isolated Docker environment.',
-    startTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // Ongoing
-    endTime: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
-    createdBy: 'admin_master',
-    isPublic: true,
-    problems: ['p1', 'p2', 'p3'],
-    participants: ['alice_coder', 'bob_dev', 'user_student']
-  },
-  {
-    id: 'c2',
-    title: 'Advanced Graph Algorithms Cup',
-    description: 'Focus on shortest paths, spanning trees, and maximum flows. Recommended for advanced competitors.',
-    startTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // Upcoming
-    endTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000).toISOString(),
-    createdBy: 'teacher_joy',
-    isPublic: true,
-    problems: ['p4'],
-    participants: []
+function mapBackendStatus(status: string): Submission['status'] {
+  switch (status) {
+    case 'pending': return 'Pending';
+    case 'running': return 'Running';
+    case 'accepted': return 'Accepted';
+    case 'wrong_answer': return 'Wrong Answer';
+    case 'time_limit_exceeded': return 'Time Limit Exceeded';
+    case 'compile_error': return 'Compilation Error';
+    default: return 'Wrong Answer';
   }
-];
-
-const DEFAULT_SUBMISSIONS: Submission[] = [
-  {
-    id: 's1',
-    problemId: 'p1',
-    problemTitle: 'Two Sum',
-    userId: 'u2',
-    username: 'alice_coder',
-    language: 'python',
-    sourceCode: 'def twoSum(nums, target):\n    dct = {}\n    for i, num in enumerate(nums):\n        if target - num in dct:\n            return [dct[target - num], i]\n        dct[num] = i\n    return []',
-    status: 'Accepted',
-    score: 100,
-    timeUsedMs: 45,
-    memoryUsedKb: 14200,
-    createdAt: new Date(Date.now() - 10 * 60 * 1000).toISOString()
-  },
-  {
-    id: 's2',
-    problemId: 'p2',
-    problemTitle: 'Valid Parentheses',
-    userId: 'u3',
-    username: 'bob_dev',
-    language: 'cpp',
-    sourceCode: '#include <iostream>\n#include <stack>\nusing namespace std;\nbool isValid(string s) {\n    stack<char> st;\n    for(char c : s) {\n        if(c==\'(\'||c==\'{\'||c==\'[\') st.push(c);\n        else {\n            if(st.empty()) return false;\n            if(c==\')\' && st.top()!=\'(\') return false;\n            if(c==\'}\' && st.top()!=\'{\') return false;\n            if(c==\']\' && st.top()!=\'[\') return false;\n            st.pop();\n        }\n    }\n    return st.empty();\n}',
-    status: 'Wrong Answer',
-    score: 30,
-    timeUsedMs: 12,
-    memoryUsedKb: 3400,
-    createdAt: new Date(Date.now() - 8 * 60 * 1000).toISOString()
-  }
-];
+}
 
 export function GradientProvider({ children }: { readonly children: React.ReactNode }): JSX.Element {
   const [theme, setThemeState] = useState<'light' | 'dark'>(() => {
@@ -256,7 +143,7 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
 
   const [role, setRoleState] = useState<UserRole>(() => {
     const saved = localStorage.getItem('gradient_role');
-    return saved === 'admin' || saved === 'student' ? saved : 'student';
+    return saved === 'admin' || saved === 'student' ? (saved as UserRole) : 'student';
   });
 
   const [username, setUsernameState] = useState<string>(() => {
@@ -264,50 +151,151 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
     return saved || 'user_student';
   });
 
-  const [problems, setProblems] = useState<readonly Problem[]>(() => {
-    const saved = localStorage.getItem('gradient_problems');
-    return saved ? JSON.parse(saved) : DEFAULT_PROBLEMS;
+  const [userId, setUserIdState] = useState<string>(() => {
+    const saved = localStorage.getItem('gradient_user_id');
+    return saved || 'u4';
   });
 
-  const [testcases, setTestcases] = useState<readonly Testcase[]>(() => {
-    const saved = localStorage.getItem('gradient_testcases');
-    return saved ? JSON.parse(saved) : DEFAULT_TESTCASES;
+  const [token, setTokenState] = useState<string | null>(() => {
+    return localStorage.getItem('gradient_token');
   });
 
-  const [contests, setContests] = useState<readonly Contest[]>(() => {
-    const saved = localStorage.getItem('gradient_contests');
-    return saved ? JSON.parse(saved) : DEFAULT_CONTESTS;
-  });
+  const [problems, setProblems] = useState<readonly Problem[]>([]);
+  const [testcases, setTestcases] = useState<readonly Testcase[]>([]);
+  const [contests, setContests] = useState<readonly Contest[]>([]);
+  const [submissions, setSubmissions] = useState<readonly Submission[]>([]);
 
-  const [submissions, setSubmissions] = useState<readonly Submission[]>(() => {
-    const saved = localStorage.getItem('gradient_submissions');
-    return saved ? JSON.parse(saved) : DEFAULT_SUBMISSIONS;
-  });
+  // Fetch initial data from backend API
+  const initData = async (tokenToUse: string | null, currentUserId: string, currentUsername: string, currentRole: string) => {
+    if (!tokenToUse) return;
+    try {
+      // 1. Fetch problems
+      const probData = await apiFetch('/api/problems', tokenToUse);
+      const mappedProblems: Problem[] = probData.map((p: any) => ({
+        id: p.ID,
+        title: p.Title,
+        slug: p.Slug,
+        description: p.Description,
+        inputFormat: p.InputFormat || '',
+        outputFormat: p.OutputFormat || '',
+        constraints: p.Constraints || '',
+        difficulty: p.Difficulty === 'easy' ? 'Easy' : p.Difficulty === 'medium' ? 'Medium' : 'Hard',
+        timeoutMs: p.TimeoutMs,
+        memoryLimitMb: p.MemoryLimitMb,
+        score: p.Score,
+        isPublished: p.IsPublished,
+        createdBy: p.CreatedBy,
+        createdAt: p.CreatedAt,
+        tags: p.Slug === 'two-sum' ? ['Array', 'Hash Table'] : 
+              p.Slug === 'valid-parentheses' ? ['String', 'Stack'] : 
+              p.Slug === 'longest-substring-without-repeating' ? ['String', 'Sliding Window'] : 
+              p.Slug === 'optimal-path-finder' ? ['Graph', 'Shortest Path'] : []
+      }));
+      setProblems(mappedProblems);
 
-  // Save to localStorage
-  useEffect(() => {
-    localStorage.setItem('gradient_problems', JSON.stringify(problems));
-  }, [problems]);
+      // 2. Preload testcases for all problems
+      const allTestcases: Testcase[] = [];
+      for (const p of mappedProblems) {
+        try {
+          const tcData = await apiFetch(`/api/problems/${p.id}/testcases`, tokenToUse);
+          const mappedTCs: Testcase[] = tcData.map((t: any) => ({
+            id: t.ID,
+            problemId: t.ProblemID,
+            orderIndex: t.OrderIndex,
+            input: t.Input || '',
+            expectedOutput: t.ExpectedOutput || '',
+            isSample: t.IsSample,
+            score: t.Score
+          }));
+          allTestcases.push(...mappedTCs);
+        } catch (e) {
+          console.error(`Failed to load testcases for problem ${p.id}`, e);
+        }
+      }
+      setTestcases(allTestcases);
 
-  useEffect(() => {
-    localStorage.setItem('gradient_testcases', JSON.stringify(testcases));
-  }, [testcases]);
+      // 3. Fetch contests
+      const contestData = await apiFetch('/api/contests', tokenToUse);
+      const mappedContests: Contest[] = contestData.map((c: any) => ({
+        id: c.ID,
+        title: c.Title,
+        description: c.Description,
+        startTime: c.StartTime,
+        endTime: c.EndTime,
+        createdBy: c.CreatedBy,
+        isPublic: c.IsPublic,
+        problems: [],
+        participants: []
+      }));
+      
+      for (const contest of mappedContests) {
+        try {
+          const contestProbs = await apiFetch(`/api/contests/${contest.id}/problems`, tokenToUse);
+          // Get problem IDs
+          (contest as any).problems = contestProbs.map((p: any) => p.ID);
+        } catch (e) {
+          console.error('Failed to load contest problems', e);
+        }
+      }
+      setContests(mappedContests);
 
-  useEffect(() => {
-    localStorage.setItem('gradient_contests', JSON.stringify(contests));
-  }, [contests]);
+      // 4. Fetch submissions
+      const subData = await apiFetch('/api/submissions', tokenToUse);
+      const mappedSubmissions: Submission[] = subData.map((s: any) => {
+        const prob = mappedProblems.find((p: any) => p.id === s.ProblemID);
+        return {
+          id: s.ID,
+          problemId: s.ProblemID,
+          problemTitle: prob ? prob.title : 'Unknown Problem',
+          userId: s.UserID,
+          username: s.UserID === 'u1' ? 'admin_master' : 'user_student',
+          language: s.Language,
+          sourceCode: s.SourceCode,
+          status: mapBackendStatus(s.Status),
+          score: s.Score,
+          timeUsedMs: s.TimeUsedMs,
+          memoryUsedKb: s.MemoryUsedKb,
+          stdout: s.Stdout,
+          stderr: s.Stderr,
+          createdAt: s.CreatedAt
+        };
+      });
+      setSubmissions(mappedSubmissions);
+    } catch (err) {
+      console.error('Failed to load data from backend:', err);
+    }
+  };
 
-  useEffect(() => {
-    localStorage.setItem('gradient_submissions', JSON.stringify(submissions));
-  }, [submissions]);
-
-  const setRole = (newRole: UserRole): void => {
-    setRoleState(newRole);
-    localStorage.setItem('gradient_role', newRole);
-    // Auto sync appropriate username
-    const name = newRole === 'admin' ? 'admin_master' : 'user_student';
-    setUsernameState(name);
-    localStorage.setItem('gradient_username', name);
+  const setRole = async (newRole: UserRole): Promise<void> => {
+    try {
+      const usernameToUse = newRole === 'admin' ? 'admin_master' : 'user_student';
+      const passwordToUse = newRole === 'admin' ? 'admin123' : 'student123';
+      
+      const res = await apiFetch('/api/auth/login', null, {
+        method: 'POST',
+        body: JSON.stringify({
+          username: usernameToUse,
+          password: passwordToUse
+        })
+      });
+      
+      const tokenVal = res.token;
+      const userVal = res.user;
+      
+      localStorage.setItem('gradient_token', tokenVal);
+      localStorage.setItem('gradient_role', newRole);
+      localStorage.setItem('gradient_username', userVal.username);
+      localStorage.setItem('gradient_user_id', userVal.id);
+      
+      setRoleState(newRole);
+      setUsernameState(userVal.username);
+      setUserIdState(userVal.id);
+      setTokenState(tokenVal);
+      
+      await initData(tokenVal, userVal.id, userVal.username, newRole);
+    } catch (e) {
+      console.error('Failed to log in to backend:', e);
+    }
   };
 
   const setUsername = (name: string): void => {
@@ -315,189 +303,295 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
     localStorage.setItem('gradient_username', name);
   };
 
-  // Actions
-  const addProblem = (newProb: Omit<Problem, 'id' | 'createdAt' | 'createdBy'>): void => {
-    const id = `p_${Date.now()}`;
-    const problem: Problem = {
-      ...newProb,
-      id,
-      createdBy: username,
-      createdAt: new Date().toISOString()
-    };
-    setProblems(prev => [...prev, problem]);
+  useEffect(() => {
+    const savedToken = localStorage.getItem('gradient_token');
+    const savedRole = (localStorage.getItem('gradient_role') as UserRole) || 'student';
+    const savedUsername = localStorage.getItem('gradient_username') || 'user_student';
+    const savedUserId = localStorage.getItem('gradient_user_id') || 'u4';
+    
+    if (savedToken) {
+      setTokenState(savedToken);
+      setRoleState(savedRole);
+      setUsernameState(savedUsername);
+      setUserIdState(savedUserId);
+      initData(savedToken, savedUserId, savedUsername, savedRole);
+    } else {
+      setRole(savedRole);
+    }
+  }, []);
 
-    // Create a dummy testcase for this new problem
-    const defaultTestcase: Testcase = {
-      id: `t_${Date.now()}`,
-      problemId: id,
-      orderIndex: 1,
-      input: 'sample input data',
-      expectedOutput: 'sample expected output',
-      isSample: true,
-      score: 100
-    };
-    setTestcases(prev => [...prev, defaultTestcase]);
+  const addProblem = async (newProb: Omit<Problem, 'id' | 'createdAt' | 'createdBy'>): Promise<void> => {
+    try {
+      const res = await apiFetch('/api/problems', token, {
+        method: 'POST',
+        body: JSON.stringify({
+          title: newProb.title,
+          slug: newProb.slug,
+          description: newProb.description,
+          input_format: newProb.inputFormat,
+          output_format: newProb.outputFormat,
+          constraints: newProb.constraints,
+          difficulty: newProb.difficulty.toLowerCase(),
+          timeout_ms: newProb.timeoutMs,
+          memory_limit_mb: newProb.memoryLimitMb,
+          score: newProb.score,
+          is_published: newProb.isPublished
+        })
+      });
+      
+      const problem: Problem = {
+        id: res.ID,
+        title: res.Title,
+        slug: res.Slug,
+        description: res.Description,
+        inputFormat: res.InputFormat || '',
+        outputFormat: res.OutputFormat || '',
+        constraints: res.Constraints || '',
+        difficulty: res.Difficulty === 'easy' ? 'Easy' : res.Difficulty === 'medium' ? 'Medium' : 'Hard',
+        timeoutMs: res.TimeoutMs,
+        memoryLimitMb: res.MemoryLimitMb,
+        score: res.Score,
+        isPublished: res.IsPublished,
+        createdBy: res.CreatedBy,
+        createdAt: res.CreatedAt,
+        tags: newProb.tags
+      };
+      setProblems(prev => [...prev, problem]);
+
+      // Create initial sample testcase for problem
+      await apiFetch(`/api/problems/${res.ID}/testcases`, token, {
+        method: 'POST',
+        body: JSON.stringify({
+          order_index: 1,
+          input: 'sample input data',
+          expected_output: 'sample expected output',
+          is_sample: true,
+          score: 100
+        })
+      });
+
+      await reloadTestcases(res.ID);
+    } catch (e) {
+      console.error('Failed to add problem:', e);
+    }
+  };
+
+  const reloadTestcases = async (problemId: string) => {
+    try {
+      const tcData = await apiFetch(`/api/problems/${problemId}/testcases`, token);
+      const mappedTCs: Testcase[] = tcData.map((t: any) => ({
+        id: t.ID,
+        problemId: t.ProblemID,
+        orderIndex: t.OrderIndex,
+        input: t.Input || '',
+        expectedOutput: t.ExpectedOutput || '',
+        isSample: t.IsSample,
+        score: t.Score
+      }));
+      setTestcases(prev => {
+        const filtered = prev.filter(tc => tc.problemId !== problemId);
+        return [...filtered, ...mappedTCs];
+      });
+    } catch (e) {
+      console.error('Failed to reload testcases:', e);
+    }
   };
 
   const updateProblem = (id: string, updates: Partial<Problem>): void => {
+    // GORM backend doesn't support PATCH problem yet, fallback to local state update
     setProblems(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
   };
 
   const deleteProblem = (id: string): void => {
+    // GORM backend doesn't support DELETE problem yet, fallback to local state update
     setProblems(prev => prev.filter(p => p.id !== id));
     setTestcases(prev => prev.filter(t => t.problemId !== id));
   };
 
   const publishProblem = (id: string, isPublished: boolean): void => {
+    // GORM backend doesn't support PATCH problem yet, fallback to local state update
     updateProblem(id, { isPublished });
   };
 
-  const addTestcase = (problemId: string, tc: Omit<Testcase, 'id' | 'problemId' | 'orderIndex'>): void => {
-    const probTCs = testcases.filter(t => t.problemId === problemId);
-    const orderIndex = probTCs.length + 1;
-    const newTC: Testcase = {
-      ...tc,
-      id: `t_${Date.now()}`,
-      problemId,
-      orderIndex
-    };
-    setTestcases(prev => [...prev, newTC]);
+  const addTestcase = async (problemId: string, tc: Omit<Testcase, 'id' | 'problemId' | 'orderIndex'>): Promise<void> => {
+    try {
+      const probTCs = testcases.filter(t => t.problemId === problemId);
+      const orderIndex = probTCs.length + 1;
+      
+      const res = await apiFetch(`/api/problems/${problemId}/testcases`, token, {
+        method: 'POST',
+        body: JSON.stringify({
+          order_index: orderIndex,
+          input: tc.input,
+          expected_output: tc.expectedOutput,
+          is_sample: tc.isSample,
+          score: tc.score
+        })
+      });
+      
+      const newTC: Testcase = {
+        id: res.ID,
+        problemId: res.ProblemID,
+        orderIndex: res.OrderIndex,
+        input: res.Input || '',
+        expectedOutput: res.ExpectedOutput || '',
+        isSample: res.IsSample,
+        score: res.Score
+      };
+      setTestcases(prev => [...prev, newTC]);
+    } catch (e) {
+      console.error('Failed to add testcase:', e);
+    }
   };
 
   const deleteTestcase = (id: string): void => {
+    // GORM backend doesn't support DELETE testcase yet, fallback to local state update
     setTestcases(prev => prev.filter(t => t.id !== id));
   };
 
-  const addContest = (newContest: Omit<Contest, 'id' | 'createdBy' | 'participants'>): void => {
-    const contest: Contest = {
-      ...newContest,
-      id: `c_${Date.now()}`,
-      createdBy: username,
-      participants: []
-    };
-    setContests(prev => [...prev, contest]);
-  };
+  const addContest = async (newContest: Omit<Contest, 'id' | 'createdBy' | 'participants'>): Promise<void> => {
+    try {
+      const res = await apiFetch('/api/contests', token, {
+        method: 'POST',
+        body: JSON.stringify({
+          title: newContest.title,
+          description: newContest.description,
+          start_time: newContest.startTime,
+          end_time: newContest.endTime,
+          is_public: newContest.isPublic
+        })
+      });
 
-  const joinContest = (contestId: string): void => {
-    setContests(prev => prev.map(c => {
-      if (c.id === contestId) {
-        if (c.participants.includes(username)) return c;
-        return {
-          ...c,
-          participants: [...c.participants, username]
-        };
-      }
-      return c;
-    }));
-  };
+      const contest: Contest = {
+        id: res.ID,
+        title: res.Title,
+        description: res.Description,
+        startTime: res.StartTime,
+        endTime: res.EndTime,
+        createdBy: res.CreatedBy,
+        isPublic: res.IsPublic,
+        problems: [],
+        participants: []
+      };
 
-  // Mock code runner inside browser. It simulates the compilation & run of code.
-  const submitCode = async (problemId: string, language: string, sourceCode: string): Promise<string> => {
-    const prob = problems.find(p => p.id === problemId);
-    const subId = `sub_${Date.now()}`;
-    const newSubmission: Submission = {
-      id: subId,
-      problemId,
-      problemTitle: prob?.title ?? 'Unknown Problem',
-      userId: role === 'admin' ? 'u1' : 'u4',
-      username,
-      language,
-      sourceCode,
-      status: 'Pending',
-      score: 0,
-      timeUsedMs: 0,
-      memoryUsedKb: 0,
-      createdAt: new Date().toISOString()
-    };
-
-    setSubmissions(prev => [newSubmission, ...prev]);
-
-    // Trigger asynchronous mock evaluation
-    triggerMockEvaluation(subId, problemId, sourceCode);
-
-    return subId;
-  };
-
-  const triggerMockEvaluation = (subId: string, problemId: string, sourceCode: string): void => {
-    // 1. Pending -> Running after 600ms
-    setTimeout(() => {
-      setSubmissions(prev => prev.map(s => s.id === subId ? { ...s, status: 'Running' } : s));
-
-      // 2. Running -> Evaluation Result after 1500ms
-      setTimeout(() => {
-        const prob = problems.find(p => p.id === problemId);
-        const probTestcases = testcases.filter(t => t.problemId === problemId);
-
-        let status: Submission['status'] = 'Accepted';
-        let score = 0;
-        let timeUsedMs = Math.floor(Math.random() * 80) + 15; // 15ms - 95ms
-        let memoryUsedKb = Math.floor(Math.random() * 8000) + 4000; // 4MB - 12MB
-        let stdout = 'All tests passed.\n';
-        let stderr = '';
-
-        // Simplistic code checks to make it interactive and respond to code contents:
-        const lowerCode = sourceCode.toLowerCase();
-        
-        if (lowerCode.trim() === '' || sourceCode.length < 10) {
-          status = 'Compilation Error';
-          score = 0;
-          stdout = '';
-          stderr = 'error: syntax error, empty solution file or missing main declaration';
-        } else if (lowerCode.includes('while true') || lowerCode.includes('for(;;)') || lowerCode.includes('while(true)')) {
-          status = 'Time Limit Exceeded';
-          score = Math.floor(probTestcases.filter(t => t.isSample).reduce((acc, curr) => acc + curr.score, 0));
-          timeUsedMs = prob?.timeoutMs ?? 1000;
-          stdout = 'Testcase 1: Success\nTestcase 2: Running...\n';
-          stderr = 'Process terminated: exceeded maximum execution time.';
-        } else if (lowerCode.includes('throw') || lowerCode.includes('raise') || lowerCode.includes('panic') || lowerCode.includes('exception')) {
-          status = 'Compilation Error';
-          score = 0;
-          stdout = 'Testcase 1: Crashed\n';
-          stderr = 'Runtime Exception: Simulated error occurred in line 4.';
-        } else {
-          // Standard submission: calculate score based on testcases
-          const hasIncorrectLogic = lowerCode.includes('wrong') || lowerCode.includes('return -1') || lowerCode.includes('return false') && prob?.slug === 'valid-parentheses';
-          if (hasIncorrectLogic) {
-            status = 'Wrong Answer';
-            // Solve sample, fail non-sample
-            const sampleScore = probTestcases.filter(t => t.isSample).reduce((acc, curr) => acc + curr.score, 0);
-            score = sampleScore;
-            stdout = 'Testcase 1 (Sample): Success\nTestcase 2: Failed. Expected "true", got "false"';
-          } else {
-            // Full score
-            status = 'Accepted';
-            score = prob?.score ?? 100;
-            stdout = probTestcases.map((t, idx) => `Testcase ${idx + 1} (${t.isSample ? 'Sample' : 'Secret'}): Success (${t.score}/${t.score} pts)`).join('\n');
-          }
+      for (let idx = 0; idx < newContest.problems.length; idx++) {
+        const probId = newContest.problems[idx];
+        try {
+          const cp = await apiFetch(`/api/contests/${res.ID}/problems`, token, {
+            method: 'POST',
+            body: JSON.stringify({
+              problem_id: probId,
+              label: String.fromCharCode(65 + idx),
+              order_index: idx + 1
+            })
+          });
+          contest.problems.push(cp.ProblemID);
+        } catch (e) {
+          console.error(`Failed to map problem ${probId} to contest:`, e);
         }
+      }
 
-        setSubmissions(prev => prev.map(s => s.id === subId ? {
-          ...s,
-          status,
-          score,
-          timeUsedMs,
-          memoryUsedKb,
-          stdout,
-          stderr
-        } : s));
+      setContests(prev => [...prev, contest]);
+    } catch (e) {
+      console.error('Failed to add contest:', e);
+    }
+  };
 
-      }, 1500);
-    }, 600);
+  const joinContest = async (contestId: string): Promise<void> => {
+    try {
+      await apiFetch(`/api/contests/${contestId}/join`, token, {
+        method: 'POST'
+      });
+      
+      setContests(prev => prev.map(c => {
+        if (c.id === contestId) {
+          if (c.participants.includes(username)) return c;
+          return {
+            ...c,
+            participants: [...c.participants, username]
+          };
+        }
+        return c;
+      }));
+    } catch (e) {
+      console.error('Failed to join contest:', e);
+    }
+  };
+
+  // Poll submission status in real-time
+  const pollSubmission = (subId: string) => {
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts++;
+      if (attempts > 60) { // Timeout after 60 seconds
+        clearInterval(interval);
+        return;
+      }
+      try {
+        const tokenToUse = localStorage.getItem('gradient_token');
+        const s = await apiFetch(`/api/submissions/${subId}`, tokenToUse);
+        if (s.Status !== 'pending' && s.Status !== 'running') {
+          setSubmissions(prev => prev.map(item => item.id === subId ? {
+            ...item,
+            status: mapBackendStatus(s.Status),
+            score: s.Score,
+            timeUsedMs: s.TimeUsedMs,
+            memoryUsedKb: s.MemoryUsedKb,
+            stdout: s.Stdout,
+            stderr: s.Stderr
+          } : item));
+          clearInterval(interval);
+        } else {
+          setSubmissions(prev => prev.map(item => item.id === subId ? {
+            ...item,
+            status: mapBackendStatus(s.Status)
+          } : item));
+        }
+      } catch (e) {
+        console.error('Failed to poll submission', e);
+        clearInterval(interval);
+      }
+    }, 1000);
+  };
+
+  const submitCode = async (problemId: string, language: string, sourceCode: string): Promise<string> => {
+    const res = await apiFetch('/api/submissions', token, {
+      method: 'POST',
+      body: JSON.stringify({
+        problem_id: problemId,
+        language: language.toLowerCase(),
+        source_code: sourceCode
+      })
+    });
+    
+    const newSub: Submission = {
+      id: res.ID,
+      problemId: res.ProblemID,
+      problemTitle: problems.find(p => p.id === problemId)?.title ?? 'Unknown Problem',
+      userId: res.UserID,
+      username: username,
+      language: res.Language,
+      sourceCode: res.SourceCode,
+      status: mapBackendStatus(res.Status),
+      score: res.Score,
+      timeUsedMs: res.TimeUsedMs,
+      memoryUsedKb: res.MemoryUsedKb,
+      stdout: res.Stdout,
+      stderr: res.Stderr,
+      createdAt: res.CreatedAt
+    };
+    
+    setSubmissions(prev => [newSub, ...prev]);
+    pollSubmission(res.ID);
+    
+    return res.ID;
   };
 
   const regradeSubmission = (submissionId: string): void => {
+    // Regrade fallback - re-submit the code
     const sub = submissions.find(s => s.id === submissionId);
     if (!sub) return;
-
-    setSubmissions(prev => prev.map(s => s.id === submissionId ? {
-      ...s,
-      status: 'Pending',
-      score: 0,
-      timeUsedMs: 0,
-      memoryUsedKb: 0
-    } : s));
-
-    triggerMockEvaluation(submissionId, sub.problemId, sub.sourceCode);
+    submitCode(sub.problemId, sub.language, sub.sourceCode);
   };
 
   return (

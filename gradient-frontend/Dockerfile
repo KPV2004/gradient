@@ -2,17 +2,17 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN bun install
 COPY . .
 
 # Development stage
 FROM base AS development
 EXPOSE 5173
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD ["bun", "run", "dev", "--", "--host", "0.0.0.0"]
 
 # Production build stage
 FROM base AS build
-RUN npm run build
+RUN bun run build
 
 # Production run stage
 FROM nginx:alpine AS production
