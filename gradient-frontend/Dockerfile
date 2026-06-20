@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS base
+FROM oven/bun:alpine AS base
 WORKDIR /app
 COPY package*.json ./
 RUN bun install

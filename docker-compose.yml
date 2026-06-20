@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: gradient_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: gradient_user
+      POSTGRES_PASSWORD: gradient_pass
+      POSTGRES_DB: gradient
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./gradient-backend/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    networks:
+      - gradient_network
+
+  # 2. Grader Service (gRPC)
+  grader-service:
+    build:
+      context: ./gradient-backend
+      dockerfile: apps/grader-service/Dockerfile
+    container_name: gradient_grader_service
+    restart: always
+    environment:
+      APP_ENV: development
+      GRADER_PORT: 8081
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: gradient_user
+      POSTGRES_PASSWORD: gradient_pass
+      POSTGRES_DB: gradient
+      POSTGRES_SSLMODE: disable
+      GRADER_SANDBOX_PROFILE_PATH: ./config/sandbox_profiles.yaml
+    ports:
+      - "8081:8081"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - db
+    networks:
+      - gradient_network
+
+  # 3. CMS Service (HTTP API)
+  cms-service:
+    build:
+      context: ./gradient-backend
+      dockerfile: apps/cms-service/Dockerfile
+    container_name: gradient_cms_service
+    restart: always
+    environment:
+      APP_ENV: development
+      CMS_PORT: 8080
+      GRADER_ADDR: grader-service:8081
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: gradient_user
+      POSTGRES_PASSWORD: gradient_pass
+      POSTGRES_DB: gradient
+      POSTGRES_SSLMODE: disable
+      JWT_SECRET: change-this-to-a-long-random-secret-key-for-development
+      JWT_EXPIRES_IN: 24h
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - grader-service
+    networks:
+      - gradient_network
+
+  # 4. Frontend (using Bun)
+  frontend:
+    build:
+      context: ./gradient-frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: gradient_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./gradient-frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8080
+    depends_on:
+      - cms-service
+    networks:
+      - gradient_network
+    restart: always
+
+volumes:
+  postgres_data:
+
+networks:
+  gradient_network:
+    driver: bridge
