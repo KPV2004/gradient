@@ -9,178 +9,115 @@
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge)](file:///Users/kong/Documents/Project/gradient/LICENSE)
 
-**Gradient** คือแพลตฟอร์มระบบตรวจการเขียนโปรแกรมและการแข่งขันเขียนโค้ดออนไลน์ (Online Judge & Programming Contest Platform) แบบ Full-stack ที่ประกอบด้วยระบบส่วนหน้า (Frontend) ที่ตอบสนองรวดเร็ว และระบบส่วนหลัง (Backend) แบบโครงสร้างแยกส่วนบริการ (Microservices Architecture) ที่เน้นประสิทธิภาพ ความปลอดภัยในการตรวจรหัสต้นฉบับ (Source Code) และความสามารถในการขยายระบบ
+**Gradient** คือแพลตฟอร์มระบบตรวจการเขียนโปรแกรมและการแข่งขันเขียนโค้ดออนไลน์ (Online Judge) แบบ Full-stack โดยใช้โครงสร้าง Microservices พัฒนาด้วยภาษา Go ในฝั่งระบบหลังบ้าน และใช้ React + TypeScript ในระบบฝั่งหน้าบ้าน
 
 ---
 
-## 🏗️ สถาปัตยกรรมระบบ (System Architecture)
+## 📁 โครงสร้างโปรเจกต์ (Project Structure)
 
-ระบบ Gradient ได้รับการออกแบบให้สอดคล้องตามหลักสถาปัตยกรรมที่ทันสมัยและปลอดภัย โดยแยกหน้าที่การทำงานออกจากกันดังแผนภาพด้านล่าง:
+โปรเจกต์นี้จัดการโค้ดแบบ Monorepo แบ่งออกเป็น 2 ส่วนหลัก:
 
-```mermaid
-graph TD
-    User([ผู้ใช้ / Frontend]) -->|HTTP REST API| CMS["CMS Service (Gin HTTP on :8080)"]
-    CMS -->|1. บันทึกข้อมูลการส่ง| DB[(PostgreSQL)]
-    CMS -->|2. สั่งตรวจโค้ดผ่าน gRPC| Grader["Grader Service (gRPC on :8081)"]
-    
-    subgraph Grader Engine (ระบบตรวจคำตอบ)
-        Grader -->|3. ดึงโครงสร้างชุดทดสอบ| Config["Language Profiles (YAML)"]
-        Grader -->|4. ควบคุมตู้คอนเทนเนอร์| Docker[Host Docker Daemon]
-        Docker -->|5. รันโค้ดอย่างปลอดภัย| Sandbox["Docker Container (Isolated Sandbox)"]
-    end
-    
-    Grader -->|6. ปรับปรุงสถานะและผลลัพธ์| DB
-```
-
-ระบบแบ่งออกเป็น 3 ภาคส่วนหลัก ได้แก่:
-1. **[gradient-frontend](file:///Users/kong/Documents/Project/gradient/gradient-frontend)**: ส่วนติดต่อผู้ใช้งาน (User Interface) พัฒนาด้วย React, TypeScript และ Vite สำหรับจัดการและแสดงผลโจทย์ปัญหา การแข่งขัน บอร์ดคะแนนสะสม และการส่งคำตอบของนักเรียน/ผู้เข้าแข่งขัน
-2. **CMS Service (ใน [gradient-backend](file:///Users/kong/Documents/Project/gradient/gradient-backend))**: ให้บริการ HTTP REST API สำหรับจัดการระบบสมาชิก (Authentication), การจัดการโจทย์ (Problems), ชุดทดสอบตัวอย่าง (Sample Testcases) และห้องแข่งขันเขียนโปรแกรม (Contests)
-3. **Grader Service (ใน [gradient-backend](file:///Users/kong/Documents/Project/gradient/gradient-backend))**: ระบบการตรวจและประเมินผลผ่าน gRPC มีหน้าที่คอมไพล์และทดสอบรันรหัสต้นฉบับของผู้ใช้ในสภาพแวดล้อมจำลองที่ปิดและปลอดภัย (Isolated Docker Container Sandbox) ป้องกันโค้ดอันตราย (Malicious Code Execution) พร้อมการจำกัดปริมาณการใช้หน่วยความจำ (Memory Limit) และเวลา (Time Limit)
+* **[gradient-frontend](file:///Users/kong/Documents/Project/gradient/gradient-frontend)**: ส่วนติดต่อผู้ใช้งาน พัฒนาด้วย React, TypeScript และ Vite
+* **[gradient-backend](file:///Users/kong/Documents/Project/gradient/gradient-backend)**: ระบบหลังบ้านพัฒนาด้วย Go และ gRPC ประกอบด้วย:
+  * **CMS Service**: บริการ REST API จัดการโจทย์ ผู้ใช้ และการแข่งขัน
+  * **Grader Service**: บริการตรวจโค้ดของผู้ใช้ผ่านระบบจำลองที่ปลอดภัย (Docker Sandbox)
 
 ---
 
-## 📁 โครงสร้างโฟลเดอร์ของโครงการ (Repository Structure)
+## 🛠️ สิ่งที่ต้องเตรียมก่อนติดตั้ง (Prerequisites)
 
-โครงการนี้เป็นโครงสร้างแบบโมโนรีโพ (Monorepo) โดยแยกส่วนพัฒนาเป็นสัดส่วน ดังนี้:
-
-```text
-gradient/
-├── LICENSE                     # สัญญาอนุญาตการใช้งานระบบ (Apache License 2.0)
-├── README.md                   # เอกสารประกอบโครงการ (ไฟล์นี้)
-│
-├── gradient-backend/           # ระบบหลังบ้านพัฒนาด้วย Go และ gRPC
-│   ├── apps/
-│   │   ├── cms-service/        # บริการ REST API จัดการโจทย์และสมาชิก
-│   │   ├── grader-service/     # บริการตรวจโค้ดผ่าน Docker Sandbox
-│   │   └── shared/             # แพ็คเกจร่วม เช่น โครงสร้างฐานข้อมูล และโปรโตคอลบัฟเฟอร์ (Proto)
-│   ├── database/               # สคริปต์จัดการโครงสร้างฐานข้อมูล (SQL Schema)
-│   ├── .env.example            # ไฟล์ต้นแบบกำหนดค่าคอนฟิกสภาพแวดล้อม
-│   └── docker-compose.yml      # ไฟล์รวมบริการฐานข้อมูลและแบ็กเอนด์ผ่าน Docker
-│
-└── gradient-frontend/          # ระบบหน้าบ้านพัฒนาด้วย React, TS และ Vite
-    ├── src/                    # ซอร์สโค้ดฝั่งหน้าบ้าน (Components, Pages, API hooks)
-    ├── package.json            # ไฟล์ระบุ Dependencies และ Scripts ฝั่งหน้าบ้าน
-    └── tsconfig.json           # คอนฟิกูเรชันของ TypeScript
-```
+* **Go (1.26 ขึ้นไป)**
+* **Node.js (LTS)**
+* **Docker / Docker Desktop** (จำเป็นอย่างยิ่งสำหรับการทำงานของระบบตรวจโค้ด)
+* **PostgreSQL (15 ขึ้นไป)**
 
 ---
 
-## 🛠️ ความต้องการพื้นฐานและการตั้งค่า (Prerequisites & Setup)
-
-ก่อนเริ่มต้นติดตั้งและเปิดใช้งานระบบ กรุณาตรวจสอบและเตรียมความพร้อมของซอฟต์แวร์เหล่านี้ในเครื่องคอมพิวเตอร์ของคุณ:
-
-* **Go (เวอร์ชัน 1.26 ขึ้นไป)**
-* **Node.js (LTS)** และโปรแกรมจัดการแพ็คเกจ (**npm** หรือ **yarn**)
-* **Docker / Docker Desktop** (จำเป็นอย่างยิ่งสำหรับการทำงานของ Grader Engine ในการรัน Sandbox)
-* **PostgreSQL (เวอร์ชัน 15 ขึ้นไป)** (หากเลือกติดตั้งแบบพัฒนาระดับเครื่องโลคัล)
-
----
-
-## 🚀 ขั้นตอนการติดตั้งและเปิดใช้งาน (Getting Started)
+## 🚀 วิธีการเปิดใช้งานระบบ (Getting Started)
 
 > [!IMPORTANT]
-> **ระบบตรวจโค้ด (Grader Service) จำเป็นต้องมี Docker Daemon ทำงานอยู่เสมอ** เพื่อใช้รันรหัสต้นฉบับของผู้สมัครสอบในตู้คอนเทนเนอร์แยกส่วนอย่างปลอดภัย
+> **กรุณาเปิดใช้ Docker Daemon ก่อนเริ่มรันระบบเสมอ** เพื่อให้ Grader Service สามารถรันโค้ดผู้ใช้ใน Sandbox ได้อย่างถูกต้อง
 
-### วิธีที่ 1: ติดตั้งผ่าน Docker Compose (แนะนำสำหรับทดสอบและใช้งานด่วน)
+### วิธีที่ 1: รันผ่าน Docker Compose (แนะนำและง่ายที่สุด)
 
-วิธีนี้เป็นวิธีที่ง่ายที่สุด ระบบจะเตรียมฐานข้อมูล PostgreSQL ติดตั้ง Schema เริ่มต้น และรัน CMS Service กับ Grader Service พร้อมกันให้อัตโนมัติ:
-
-1. ย้ายเข้าไปในโฟลเดอร์ระบบหลังบ้าน:
+1. เข้าไปยังโฟลเดอร์ของระบบหลังบ้าน:
    ```bash
    cd gradient-backend
    ```
-2. คัดลอกและตั้งค่าสภาพแวดล้อมเริ่มต้น:
+2. คัดลอกไฟล์ตั้งค่า Environment:
    ```bash
    cp .env.example .env
    ```
-3. สั่งรันบริการทั้งหมดผ่าน Docker Compose:
+3. สั่งรันระบบทั้งหมด:
    ```bash
    docker-compose up --build
    ```
-   * **CMS REST API** จะเริ่มทำงานที่: `http://localhost:8080`
-   * **Grader gRPC Service** จะเริ่มทำงานที่: `localhost:8081`
-   * **PostgreSQL** จะดึง Schema จาก [schema.sql](file:///Users/kong/Documents/Project/gradient/gradient-backend/database/schema.sql) มารันตั้งค่าเริ่มต้นโดยอัตโนมัติ
+   * **CMS Service (HTTP API)** จะรันอยู่ที่: `http://localhost:8080`
+   * **Grader Service (gRPC)** จะรันอยู่ที่: `localhost:8081`
+   * **PostgreSQL** จะดึงโครงสร้างตารางข้อมูลเริ่มต้นจาก [schema.sql](file:///Users/kong/Documents/Project/gradient/gradient-backend/database/schema.sql) มาติดตั้งให้อัตโนมัติ
 
 ---
 
-### วิธีที่ 2: ติดตั้งแบบแยกส่วนสำหรับการพัฒนา (Local Development)
+### วิธีที่ 2: รันแยกทีละบริการ (สำหรับนักพัฒนา)
 
-หากต้องการแก้ไขซอร์สโค้ดและทดสอบระบบแบบ Real-time แนะนำให้ติดตั้งแบบแยกส่วนดังนี้:
-
-#### 1. การเตรียมและจัดการฝั่งหลังบ้าน (Backend)
-1. เปิดฐานข้อมูล PostgreSQL ในเครื่องของคุณ จากนั้นสร้างฐานข้อมูลเปล่าชื่อ `gradient`
-2. นำเข้าฐานข้อมูลเริ่มต้นด้วยคำสั่ง:
+#### 1. ฝั่งระบบหลังบ้าน (Backend)
+1. นำเข้าตารางข้อมูลเริ่มต้นเข้าสู่ PostgreSQL ในเครื่อง:
    ```bash
-   psql -u [ชื่อผู้ใช้] -d gradient -f gradient-backend/database/schema.sql
+   psql -u [username] -d gradient -f gradient-backend/database/schema.sql
    ```
-3. คัดลอกไฟล์คอนฟิกูเรชันใน [gradient-backend](file:///Users/kong/Documents/Project/gradient/gradient-backend):
+2. ตั้งค่าไฟล์สภาพแวดล้อม:
    ```bash
    cd gradient-backend
    cp .env.example .env
    ```
-   *แก้ไขไฟล์ `.env` เพื่อให้การเชื่อมต่อกับฐานข้อมูลถูกต้อง*
-4. เปิดการทำงานของ Grader Service (gRPC):
+3. รัน Grader Service (gRPC):
    ```bash
    go run apps/grader-service/main.go
    ```
-5. เปิดการทำงานของ CMS Service (REST API) ใน Terminal ใหม่:
+4. รัน CMS Service (REST API) ในอีกหน้าต่าง Terminal:
    ```bash
    go run apps/cms-service/main.go
    ```
 
-#### 2. การเตรียมและจัดการฝั่งหน้าบ้าน (Frontend)
-1. ย้ายเข้าสู่โฟลเดอร์ [gradient-frontend](file:///Users/kong/Documents/Project/gradient/gradient-frontend):
+#### 2. ฝั่งระบบหน้าบ้าน (Frontend)
+1. เข้าไปในโฟลเดอร์ [gradient-frontend](file:///Users/kong/Documents/Project/gradient/gradient-frontend):
    ```bash
    cd gradient-frontend
    ```
-2. ติดตั้งโมดูลและแพ็คเกจพึ่งพาภายนอก:
+2. ติดตั้ง Dependencies และเริ่มทำงาน:
    ```bash
    npm install
-   # or
-   bun install
-   ```
-3. รันเซิร์ฟเวอร์พัฒนาระบบหน้าบ้าน:
-   ```bash
    npm run dev
-   # or
-   bun run dev
    ```
-   *ระบบส่วนหน้าพร้อมใช้จะแสดง URL ในหน้าต่าง Terminal (ปกติคือ `http://localhost:5173`)*
+   *ระบบส่วนหน้าจะรันที่พอร์ตพัฒนาเริ่มต้น (ปกติคือ `http://localhost:5173`)*
 
 ---
 
-## 📡 สรุปเส้นทางการให้บริการข้อมูล (API Endpoints Summary)
+## 📡 รายการ API สำคัญ (Key API Endpoints)
 
-ในการเรียกใช้ API (ยกเว้น API สมัครสมาชิกและล็อกอิน) จำเป็นต้องแนบโทเคนยืนยันสิทธิ์ใน HTTP Header รูปแบบ: `Authorization: Bearer <JWT_TOKEN>`
-
-| เส้นทาง API | วิธีการ (Method) | สิทธิ์เข้าใช้งาน (Access Role) | คำอธิบายรายละเอียดบริการ |
+| API Route | Method | Access Role | Description |
 | :--- | :---: | :---: | :--- |
-| **`/api/auth/register`** | `POST` | ทั่วไป (Public) | สมัครบัญชีผู้ใช้งานใหม่ในระบบ |
-| **`/api/auth/login`** | `POST` | ทั่วไป (Public) | ลงชื่อเข้าใช้งาน เพื่อรับ JWT Access Token |
-| **`/api/auth/me`** | `GET` | ทุกระดับสิทธิ์ | ตรวจสอบข้อมูลส่วนตัวของผู้ลงชื่อเข้าใช้ปัจจุบัน |
-| **`/api/problems`** | `GET` | ทุกระดับสิทธิ์ | ดูรายการโจทย์ทั้งหมด (นักเรียนเห็นเฉพาะโจทย์ที่เปิดเผยแล้ว) |
-| **`/api/problems/:id`** | `GET` | ทุกระดับสิทธิ์ | ดูรายละเอียดโจทย์เฉพาะและข้อมูลชุดทดสอบตัวอย่าง |
-| **`/api/problems`** | `POST` | อาจารย์ / ผู้ดูแลระบบ | สร้างและเพิ่มโจทย์ข้อใหม่เข้าระบบ |
-| **`/api/problems/:id/testcases`**| `POST` | อาจารย์ / ผู้ดูแลระบบ | อัปโหลดและตั้งค่าชุดข้อมูลตัวอย่างที่ใช้ตรวจโปรแกรม |
-| **`/api/contests`** | `GET` | ทุกระดับสิทธิ์ | แสดงรายชื่อสนามสอบหรือการแข่งขันทั้งหมด |
-| **`/api/contests/:id/join`** | `POST` | นักเรียน / นักศึกษา | สมัครเข้าร่วมการแข่งขันตามรหัสการแข่งขัน |
-| **`/api/contests`** | `POST` | อาจารย์ / ผู้ดูแลระบบ | สร้างการแข่งขันเขียนโปรแกรมใหม่ |
-| **`/api/submissions`** | `POST` | นักเรียน / นักศึกษา | ส่งรหัสต้นฉบับโค้ดวิเคราะห์ เพื่อนำไปตรวจผล |
-| **`/api/submissions/:id`** | `GET` | ทุกระดับสิทธิ์ | ติดตามดูประวัติและคะแนนที่ตรวจจากระบบ Grader |
+| `/api/auth/register` | `POST` | Public | สมัครบัญชีสมาชิกใหม่ |
+| `/api/auth/login` | `POST` | Public | ลงชื่อเข้าใช้เพื่อรับ JWT Token |
+| `/api/problems` | `GET` | ทุกสิทธิ์ | เรียกดูรายการโจทย์ในระบบ |
+| `/api/problems` | `POST` | Teacher / Admin | สร้างโจทย์ข้อใหม่ |
+| `/api/problems/:id/testcases` | `POST` | Teacher / Admin | ตั้งค่าข้อมูลชุดทดสอบ |
+| `/api/contests` | `POST` | Teacher / Admin | ตั้งห้องจัดประกวดแข่งขันเขียนโปรแกรม |
+| `/api/submissions` | `POST` | Student | ส่งซอร์สโค้ดเพื่อเริ่มทำการตรวจผล |
+| `/api/submissions/:id` | `GET` | ทุกสิทธิ์ | ตรวจดูผลการตรวจและคะแนนของโปรแกรม |
 
 ---
 
-## 🛡️ รายละเอียดภาษาและชุดทดลองที่ระบบรองรับ (Language Profiles Supported)
+## 🛡️ ภาษาที่ระบบตรวจรองรับ (Supported Languages)
 
-ระบบตรวจข้อสอบรองรับการวิเคราะห์หลายภาษา โดยกำหนดโครงสร้างและการรัน Sandbox ใน [sandbox_profiles.yaml](file:///Users/kong/Documents/Project/gradient/gradient-backend/apps/grader-service/config/sandbox_profiles.yaml) ดังนี้:
-
-* **C++ (v13 GCC)**
-* **Go (v1.21 golang)**
-* **Python (v3.11)**
-* **JavaScript (Node v20)**
+คุณสามารถตั้งค่าสภาวะการทำงานของแต่ละภาษาผ่านไฟล์ YAML ได้ที่ [sandbox_profiles.yaml](file:///Users/kong/Documents/Project/gradient/gradient-backend/apps/grader-service/config/sandbox_profiles.yaml) ปัจจุบันระบบตรวจคำตอบรองรับ:
+* **C++** (GCC 13)
+* **Go** (Golang 1.21)
+* **Python** (3.11)
+* **JavaScript** (Node 20)
 
 ---
 
 ## ⚖️ สัญญาอนุญาต (License)
 
-โครงการนี้อยู่ภายใต้เงื่อนไขและข้อกำหนดการใช้งานแบบ **[Apache License 2.0](file:///Users/kong/Documents/Project/gradient/LICENSE)** รายละเอียดเพิ่มเติมสามารถอ่านได้ในไฟล์ใบอนุญาตแนบมาในส่วนนำเสนอหลักของโครงการ
+โครงการนี้พัฒนาและเผยแพร่ภายใต้ใบอนุญาต **[Apache License 2.0](file:///Users/kong/Documents/Project/gradient/LICENSE)**
