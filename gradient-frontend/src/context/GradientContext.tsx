@@ -89,21 +89,6 @@ interface GradientContextType {
 
 const GradientContext = createContext<GradientContextType | undefined>(undefined);
 
-// API fetch wrapper with token header
-async function apiFetch(url: string, token: string | null, options: RequestInit = {}): Promise<any> {
-  const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers,
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-  };
-  const res = await fetch(url, { ...options, headers });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: `HTTP error ${res.status}` }));
-    throw new Error(err.error || `HTTP error ${res.status}`);
-  }
-  return res.json();
-}
-
 function mapBackendStatus(status: string): Submission['status'] {
   switch (status) {
     case 'pending': return 'Pending';
@@ -168,6 +153,24 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
   const [testcases, setTestcases] = useState<readonly Testcase[]>([]);
   const [contests, setContests] = useState<readonly Contest[]>([]);
   const [submissions, setSubmissions] = useState<readonly Submission[]>([]);
+
+  // API fetch wrapper inside Provider lexical scope for auto-logout on 401
+  const apiFetch = async (url: string, tokenOverride: string | null = token, options: RequestInit = {}): Promise<any> => {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+      ...(tokenOverride ? { 'Authorization': `Bearer ${tokenOverride}` } : {}),
+    };
+    const res = await fetch(url, { ...options, headers });
+    if (!res.ok) {
+      if (res.status === 401) {
+        logout();
+      }
+      const err = await res.json().catch(() => ({ error: `HTTP error ${res.status}` }));
+      throw new Error(err.error || `HTTP error ${res.status}`);
+    }
+    return res.json();
+  };
 
   // Fetch initial data from backend API
   const initData = async (tokenToUse: string | null, currentUserId: string, currentUsername: string, currentRole: string) => {
