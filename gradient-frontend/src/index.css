@@ -3503,3 +3503,123 @@ p {
 
 
 
+
+/* ─── File Upload UI ──────────────────────────────────────────────────────── */
+
+/* Upload button — slightly smaller, outlined style */
+.upload-btn {
+  gap: 6px;
+  font-size: 0.82rem;
+  padding: 5px 12px;
+  border: 1.5px dashed var(--border);
+  color: var(--text);
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.upload-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+/* Status bar shown after upload (success or error) */
+.upload-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  font-family: var(--mono);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.upload-status-bar.upload-success {
+  background: rgba(16, 185, 129, 0.08);
+  color: #10b981;
+  border-left: 3px solid #10b981;
+}
+.upload-status-bar.upload-error {
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--red);
+  border-left: 3px solid var(--red);
+}
+.upload-file-icon { font-size: 1rem; }
+.upload-file-name {
+  font-weight: 600;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.upload-lang-detected { color: var(--text); opacity: 0.75; }
+.upload-lang-detected strong { color: var(--text-h); opacity: 1; }
+.upload-clear-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  opacity: 0.6;
+  transition: opacity 0.1s, background 0.1s;
+  color: inherit;
+}
+.upload-clear-btn:hover { opacity: 1; background: rgba(0,0,0,0.08); }
+
+/* Editor drop wrapper — becomes the drag-over target */
+.editor-drop-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.editor-drop-wrapper.dragging .editor-textarea-wrapper {
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+/* Full-area drop overlay */
+.drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(37, 99, 235, 0.06);
+  border: 2.5px dashed var(--accent);
+  border-radius: 8px;
+  animation: dropPulse 0.9s ease-in-out infinite alternate;
+}
+@keyframes dropPulse {
+  from { border-color: var(--accent); background: rgba(37,99,235,0.06); }
+  to   { border-color: #6366f1;      background: rgba(99,102,241,0.10); }
+}
+.drop-overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--accent);
+  pointer-events: none;
+}
+.drop-overlay-content p {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.drop-overlay-content span {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  font-family: var(--mono);
+}
+
+/* Footer file tag */
+.footer-file-tag {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  background: var(--accent-bg);
+  color: var(--accent);
+  padding: 1px 8px;
+  border-radius: 4px;
+}
