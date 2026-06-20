@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useGradient } from '../context/GradientContext';
+import { UserIcon, LockIcon, EyeIcon, EyeOffIcon } from './Icons';
 
 export function Login(): JSX.Element {
   const { login } = useGradient();
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -49,30 +51,44 @@ export function Login(): JSX.Element {
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
             <label htmlFor="auth-username" className="form-label">Username or Email</label>
-            <input
-              id="auth-username"
-              type="text"
-              className="form-control"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="e.g. student_master"
-              disabled={loading}
-              required
-            />
+            <div className="input-icon-wrapper">
+              <UserIcon size={16} className="input-inner-icon" />
+              <input
+                id="auth-username"
+                type="text"
+                className="form-control form-control-with-icon"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="e.g. student_master"
+                disabled={loading}
+                required
+              />
+            </div>
           </div>
 
           <div className="form-group">
             <label htmlFor="auth-password" className="form-label">Password</label>
-            <input
-              id="auth-password"
-              type="password"
-              className="form-control"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              disabled={loading}
-              required
-            />
+            <div className="input-icon-wrapper">
+              <LockIcon size={16} className="input-inner-icon" />
+              <input
+                id="auth-password"
+                type={showPassword ? 'text' : 'password'}
+                className="form-control form-control-with-icon form-control-with-password-toggle"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                disabled={loading}
+                required
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+              </button>
+            </div>
           </div>
 
           <button

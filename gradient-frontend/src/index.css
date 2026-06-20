@@ -3137,6 +3137,10 @@ p {
   background-color: var(--card-bg);
 }
 
+.register-card {
+  max-width: 540px !important;
+}
+
 .auth-header {
   text-align: center;
   margin-bottom: 30px;
@@ -3231,6 +3235,54 @@ p {
 
 .auth-footer a:hover {
   text-decoration: underline;
+}
+
+/* Input Inner Icons and Toggles */
+.input-icon-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-inner-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.form-control-with-icon {
+  padding-left: 42px !important;
+}
+
+.input-icon-wrapper:focus-within .input-inner-icon {
+  color: var(--accent);
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+  color: var(--text-h);
+}
+
+.form-control-with-password-toggle {
+  padding-right: 42px !important;
 }
 
 
