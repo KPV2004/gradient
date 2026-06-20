@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net"
 
@@ -36,6 +37,19 @@ func main() {
 	sandbox, err := engine.NewDockerSandbox()
 	if err != nil {
 		log.Fatalf("🚨 Failed to start Docker Sandbox client: %v", err)
+	}
+
+	// 4.5 Pre-pull Docker images in the background on startup
+	var imageList []string
+	if cfg.Profiles != nil && cfg.Profiles.Languages != nil {
+		for _, profile := range cfg.Profiles.Languages {
+			if profile.Image != "" {
+				imageList = append(imageList, profile.Image)
+			}
+		}
+	}
+	if len(imageList) > 0 {
+		sandbox.PrePullImages(context.Background(), imageList)
 	}
 
 	// 5. สร้าง gRPC Server พร้อม wire ทุก dependency

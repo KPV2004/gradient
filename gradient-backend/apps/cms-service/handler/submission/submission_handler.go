@@ -4,6 +4,7 @@ package submission
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -169,6 +170,7 @@ func (h *SubmissionHandler) gradeSubmission(ctx context.Context, sub *model.Subm
 			log.Printf("❌ Grader gRPC call failed: %v", err)
 			overallStatus = model.StatusSE
 			finalStderr.WriteString("system error: grader failed\n")
+			fmt.Fprintf(&finalStdout, "Testcase %d: Crashed (0/%d pts) - System Error\n", tc.OrderIndex, tc.Score)
 			break
 		}
 
@@ -178,29 +180,33 @@ func (h *SubmissionHandler) gradeSubmission(ctx context.Context, sub *model.Subm
 
 		// Judge this specific testcase run
 		var tcStatus model.SubmissionStatus
+		var actualOutput string
+		expectedOutput := strings.TrimSpace(tc.ExpectedOutput)
+
 		if resp.IsTle {
 			tcStatus = model.StatusTLE
+			fmt.Fprintf(&finalStdout, "Testcase %d: Failed (0/%d pts) - Time Limit Exceeded\n", tc.OrderIndex, tc.Score)
 		} else if resp.ExitCode != 0 {
 			// Non-zero exit code usually means Runtime Error
 			tcStatus = model.StatusRE
 			finalStderr.WriteString(resp.Stderr)
+			fmt.Fprintf(&finalStdout, "Testcase %d: Crashed (0/%d pts) - Runtime Error (Exit Code: %d)\n", tc.OrderIndex, tc.Score, resp.ExitCode)
 		} else {
 			// Compare output (normalized)
-			actualOutput := strings.TrimSpace(resp.Stdout)
-			expectedOutput := strings.TrimSpace(tc.ExpectedOutput)
+			actualOutput = strings.TrimSpace(resp.Stdout)
 
 			if actualOutput == expectedOutput {
 				tcStatus = model.StatusAC
 				totalScore += tc.Score
+				fmt.Fprintf(&finalStdout, "Testcase %d: Success (%d/%d pts)\n", tc.OrderIndex, tc.Score, tc.Score)
 			} else {
 				tcStatus = model.StatusWA
-				// Save some output mismatch info for debug if needed
-				if tc.IsSample {
-					finalStdout.WriteString(resp.Stdout)
-					finalStderr.WriteString(resp.Stderr)
-				}
+				fmt.Fprintf(&finalStdout, "Testcase %d: Failed (0/%d pts) - Expected: %q, Actual: %q\n", tc.OrderIndex, tc.Score, expectedOutput, actualOutput)
 			}
 		}
+
+		log.Printf("[Testcase %d Log] Status: %s, ExitCode: %d, IsTle: %v\n  - Input: %q\n  - Expected: %q\n  - Actual Output: %q\n  - Stderr: %q",
+			tc.OrderIndex, tcStatus, resp.ExitCode, resp.IsTle, tc.Input, expectedOutput, actualOutput, resp.Stderr)
 
 		// Update overallStatus based on severity
 		// Priority: SE > RE > TLE > WA > AC

@@ -1,7 +1,7 @@
 # configs/sandbox_profiles.yaml
 languages:
   cpp:
-    image: "gcc:13-bookworm"
+    image: "gcc:14-bookworm"
     compile_cmd: "g++ solution.cpp -o solution -O3"
     run_cmd: "./solution"
 
