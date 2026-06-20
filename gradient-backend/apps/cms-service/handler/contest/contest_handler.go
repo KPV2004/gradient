@@ -149,6 +149,7 @@ func (h *ContestHandler) AddProblem(c *gin.Context) {
 	c.JSON(http.StatusOK, cp)
 }
 
+
 func (h *ContestHandler) GetProblems(c *gin.Context) {
 	contestID := c.Param("id")
 	userID, _ := c.Get("userID")
@@ -184,4 +185,78 @@ func (h *ContestHandler) GetProblems(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, problems)
+}
+
+type UpdateContestRequest struct {
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	StartTime   time.Time `json:"start_time"`
+	EndTime     time.Time `json:"end_time"`
+	IsPublic    bool      `json:"is_public"`
+}
+
+func (h *ContestHandler) Update(c *gin.Context) {
+	id := c.Param("id")
+
+	contest, err := h.repo.GetByID(c.Request.Context(), id)
+	if err != nil {
+		if errors.Is(err, contestRepo.ErrContestNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "contest not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var req UpdateContestRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if req.Title != "" {
+		contest.Title = req.Title
+	}
+	if req.Description != "" {
+		contest.Description = req.Description
+	}
+	if !req.StartTime.IsZero() {
+		contest.StartTime = req.StartTime
+	}
+	if !req.EndTime.IsZero() {
+		contest.EndTime = req.EndTime
+	}
+	contest.IsPublic = req.IsPublic
+
+	if contest.EndTime.Before(contest.StartTime) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "end time must be after start time"})
+		return
+	}
+
+	if err := h.repo.Update(c.Request.Context(), contest); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, contest)
+}
+
+func (h *ContestHandler) Delete(c *gin.Context) {
+	id := c.Param("id")
+
+	if _, err := h.repo.GetByID(c.Request.Context(), id); err != nil {
+		if errors.Is(err, contestRepo.ErrContestNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "contest not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.repo.Delete(c.Request.Context(), id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "contest deleted successfully"})
 }

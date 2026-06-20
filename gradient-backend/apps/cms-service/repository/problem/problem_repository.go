@@ -19,8 +19,11 @@ type ProblemRepository interface {
 	GetByID(ctx context.Context, id string) (*model.Problem, error)
 	GetBySlug(ctx context.Context, slug string) (*model.Problem, error)
 	List(ctx context.Context, publishedOnly bool) ([]*model.Problem, error)
+	Update(ctx context.Context, p *model.Problem) error
+	Delete(ctx context.Context, id string) error
 	CreateTestcase(ctx context.Context, tc *model.Testcase) error
 	GetTestcases(ctx context.Context, problemID string, samplesOnly bool) ([]*model.Testcase, error)
+	DeleteTestcase(ctx context.Context, id string) error
 }
 
 type postgresProblemRepository struct {
@@ -89,4 +92,29 @@ func (r *postgresProblemRepository) GetTestcases(ctx context.Context, problemID 
 		return nil, fmt.Errorf("failed to get testcases: %w", err)
 	}
 	return testcases, nil
+}
+
+func (r *postgresProblemRepository) Update(ctx context.Context, p *model.Problem) error {
+	if err := r.db.WithContext(ctx).Save(p).Error; err != nil {
+		return fmt.Errorf("failed to update problem: %w", err)
+	}
+	return nil
+}
+
+func (r *postgresProblemRepository) Delete(ctx context.Context, id string) error {
+	if err := r.db.WithContext(ctx).Delete(&model.Problem{}, "id = ?", id).Error; err != nil {
+		return fmt.Errorf("failed to delete problem: %w", err)
+	}
+	return nil
+}
+
+func (r *postgresProblemRepository) DeleteTestcase(ctx context.Context, id string) error {
+	result := r.db.WithContext(ctx).Delete(&model.Testcase{}, "id = ?", id)
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete testcase: %w", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("testcase not found")
+	}
+	return nil
 }

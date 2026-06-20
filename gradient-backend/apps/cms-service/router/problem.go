@@ -23,7 +23,10 @@ func RegisterProblemRoutes(apiGroup *gin.RouterGroup, problemH *problemHandler.P
 		teacherOrAdmin.Use(middleware.RequireRole(model.RoleTeacher, model.RoleAdmin))
 		{
 			teacherOrAdmin.POST("", problemH.Create)
+			teacherOrAdmin.PUT("/:id", problemH.Update)
+			teacherOrAdmin.DELETE("/:id", problemH.Delete)
 			teacherOrAdmin.POST("/:id/testcases", problemH.CreateTestcase)
+			teacherOrAdmin.DELETE("/:id/testcases/:tcId", problemH.DeleteTestcase)
 		}
 	}
 }

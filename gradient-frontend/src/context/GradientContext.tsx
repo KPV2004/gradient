@@ -64,6 +64,8 @@ interface GradientContextType {
   readonly role: UserRole;
   readonly setRole: (role: UserRole) => void;
   readonly username: string;
+  readonly displayName: string;
+  readonly email: string;
   readonly setUsername: (name: string) => void;
   readonly token: string | null;
   readonly login: (username: string, password: string) => Promise<void>;
@@ -74,11 +76,11 @@ interface GradientContextType {
   readonly contests: readonly Contest[];
   readonly submissions: readonly Submission[];
   readonly addProblem: (problem: Omit<Problem, 'id' | 'createdAt' | 'createdBy'>) => void;
-  readonly updateProblem: (id: string, updates: Partial<Problem>) => void;
-  readonly deleteProblem: (id: string) => void;
-  readonly publishProblem: (id: string, isPublished: boolean) => void;
+  readonly updateProblem: (id: string, updates: Partial<Problem>) => Promise<void>;
+  readonly deleteProblem: (id: string) => Promise<void>;
+  readonly publishProblem: (id: string, isPublished: boolean) => Promise<void>;
   readonly addTestcase: (problemId: string, testcase: Omit<Testcase, 'id' | 'problemId' | 'orderIndex'>) => void;
-  readonly deleteTestcase: (id: string) => void;
+  readonly deleteTestcase: (id: string) => Promise<void>;
   readonly addContest: (contest: Omit<Contest, 'id' | 'createdBy' | 'participants'>) => void;
   readonly joinContest: (contestId: string) => void;
   readonly submitCode: (problemId: string, language: string, sourceCode: string) => Promise<string>;
@@ -148,6 +150,9 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
   const [token, setTokenState] = useState<string | null>(() => {
     return localStorage.getItem('gradient_token');
   });
+
+  const [displayName, setDisplayNameState] = useState<string>(() => localStorage.getItem('gradient_display_name') || '');
+  const [email, setEmailState] = useState<string>(() => localStorage.getItem('gradient_email') || '');
 
   const [problems, setProblems] = useState<readonly Problem[]>([]);
   const [testcases, setTestcases] = useState<readonly Testcase[]>([]);
@@ -289,11 +294,15 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
     localStorage.setItem('gradient_role', resolvedRole);
     localStorage.setItem('gradient_username', userVal.username);
     localStorage.setItem('gradient_user_id', userVal.id);
+    localStorage.setItem('gradient_display_name', userVal.display_name || '');
+    localStorage.setItem('gradient_email', userVal.email || '');
     
     setRoleState(resolvedRole);
     setUsernameState(userVal.username);
     setUserIdState(userVal.id);
     setTokenState(tokenVal);
+    setDisplayNameState(userVal.display_name || '');
+    setEmailState(userVal.email || '');
     
     await initData(tokenVal, userVal.id, userVal.username, resolvedRole);
   };
@@ -324,10 +333,14 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
     localStorage.removeItem('gradient_role');
     localStorage.removeItem('gradient_username');
     localStorage.removeItem('gradient_user_id');
+    localStorage.removeItem('gradient_display_name');
+    localStorage.removeItem('gradient_email');
     setTokenState(null);
     setRoleState('student');
     setUsernameState('user_student');
     setUserIdState('u4');
+    setDisplayNameState('');
+    setEmailState('');
     setProblems([]);
     setTestcases([]);
     setContests([]);
@@ -437,17 +450,41 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
     }
   };
 
-  const updateProblem = (id: string, updates: Partial<Problem>): void => {
-    setProblems(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+  const updateProblem = async (id: string, updates: Partial<Problem>): Promise<void> => {
+    try {
+      const payload: Record<string, unknown> = {};
+      if (updates.title !== undefined) payload.title = updates.title;
+      if (updates.slug !== undefined) payload.slug = updates.slug;
+      if (updates.description !== undefined) payload.description = updates.description;
+      if (updates.inputFormat !== undefined) payload.input_format = updates.inputFormat;
+      if (updates.outputFormat !== undefined) payload.output_format = updates.outputFormat;
+      if (updates.constraints !== undefined) payload.constraints = updates.constraints;
+      if (updates.difficulty !== undefined) payload.difficulty = updates.difficulty.toLowerCase();
+      if (updates.timeoutMs !== undefined) payload.timeout_ms = updates.timeoutMs;
+      if (updates.memoryLimitMb !== undefined) payload.memory_limit_mb = updates.memoryLimitMb;
+      if (updates.score !== undefined) payload.score = updates.score;
+      if (updates.isPublished !== undefined) payload.is_published = updates.isPublished;
+      await apiFetch(`/api/problems/${id}`, token, { method: 'PUT', body: JSON.stringify(payload) });
+      setProblems(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+    } catch (e) {
+      console.error('Failed to update problem:', e);
+      throw e;
+    }
   };
 
-  const deleteProblem = (id: string): void => {
-    setProblems(prev => prev.filter(p => p.id !== id));
-    setTestcases(prev => prev.filter(t => t.problemId !== id));
+  const deleteProblem = async (id: string): Promise<void> => {
+    try {
+      await apiFetch(`/api/problems/${id}`, token, { method: 'DELETE' });
+      setProblems(prev => prev.filter(p => p.id !== id));
+      setTestcases(prev => prev.filter(t => t.problemId !== id));
+    } catch (e) {
+      console.error('Failed to delete problem:', e);
+      throw e;
+    }
   };
 
-  const publishProblem = (id: string, isPublished: boolean): void => {
-    updateProblem(id, { isPublished });
+  const publishProblem = async (id: string, isPublished: boolean): Promise<void> => {
+    await updateProblem(id, { isPublished });
   };
 
   const addTestcase = async (problemId: string, tc: Omit<Testcase, 'id' | 'problemId' | 'orderIndex'>): Promise<void> => {
@@ -481,8 +518,16 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
     }
   };
 
-  const deleteTestcase = (id: string): void => {
-    setTestcases(prev => prev.filter(t => t.id !== id));
+  const deleteTestcase = async (id: string): Promise<void> => {
+    try {
+      const tc = testcases.find(t => t.id === id);
+      if (!tc) return;
+      await apiFetch(`/api/problems/${tc.problemId}/testcases/${id}`, token, { method: 'DELETE' });
+      setTestcases(prev => prev.filter(t => t.id !== id));
+    } catch (e) {
+      console.error('Failed to delete testcase:', e);
+      throw e;
+    }
   };
 
   const addContest = async (newContest: Omit<Contest, 'id' | 'createdBy' | 'participants'>): Promise<void> => {
@@ -634,6 +679,8 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
       role,
       setRole,
       username,
+      displayName,
+      email,
       setUsername,
       token,
       login,
