@@ -154,6 +154,7 @@ func (h *ProblemHandler) CreateTestcase(c *gin.Context) {
 	c.JSON(http.StatusCreated, tc)
 }
 
+
 func (h *ProblemHandler) GetTestcases(c *gin.Context) {
 	problemID := c.Param("id")
 	userRole, exists := c.Get("userRole")
@@ -172,4 +173,112 @@ func (h *ProblemHandler) GetTestcases(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, testcases)
+}
+
+type UpdateProblemRequest struct {
+	Title         string           `json:"title"`
+	Slug          string           `json:"slug"`
+	Description   string           `json:"description"`
+	InputFormat   string           `json:"input_format"`
+	OutputFormat  string           `json:"output_format"`
+	Constraints   string           `json:"constraints"`
+	Difficulty    model.Difficulty `json:"difficulty"`
+	TimeoutMs     int64            `json:"timeout_ms"`
+	MemoryLimitMb int64            `json:"memory_limit_mb"`
+	Score         int              `json:"score"`
+	IsPublished   bool             `json:"is_published"`
+}
+
+func (h *ProblemHandler) Update(c *gin.Context) {
+	id := c.Param("id")
+
+	p, err := h.repo.GetByID(c.Request.Context(), id)
+	if err != nil {
+		if errors.Is(err, problemRepo.ErrProblemNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "problem not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var req UpdateProblemRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if req.Title != "" {
+		p.Title = req.Title
+	}
+	if req.Slug != "" {
+		p.Slug = req.Slug
+	}
+	if req.Description != "" {
+		p.Description = req.Description
+	}
+	if req.InputFormat != "" {
+		p.InputFormat = req.InputFormat
+	}
+	if req.OutputFormat != "" {
+		p.OutputFormat = req.OutputFormat
+	}
+	if req.Constraints != "" {
+		p.Constraints = req.Constraints
+	}
+	if req.Difficulty != "" {
+		p.Difficulty = req.Difficulty
+	}
+	if req.TimeoutMs != 0 {
+		p.TimeoutMs = req.TimeoutMs
+	}
+	if req.MemoryLimitMb != 0 {
+		p.MemoryLimitMb = req.MemoryLimitMb
+	}
+	if req.Score != 0 {
+		p.Score = req.Score
+	}
+	p.IsPublished = req.IsPublished
+
+	if err := h.repo.Update(c.Request.Context(), p); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, p)
+}
+
+func (h *ProblemHandler) Delete(c *gin.Context) {
+	id := c.Param("id")
+
+	if _, err := h.repo.GetByID(c.Request.Context(), id); err != nil {
+		if errors.Is(err, problemRepo.ErrProblemNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "problem not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.repo.Delete(c.Request.Context(), id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "problem deleted successfully"})
+}
+
+func (h *ProblemHandler) DeleteTestcase(c *gin.Context) {
+	tcID := c.Param("tcId")
+
+	if err := h.repo.DeleteTestcase(c.Request.Context(), tcID); err != nil {
+		if err.Error() == "testcase not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "testcase not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "testcase deleted successfully"})
 }

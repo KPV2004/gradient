@@ -1,17 +1,13 @@
-import React from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useGradient } from '../context/GradientContext';
-import { ShieldIcon, UserIcon, SunIcon, MoonIcon, GradientLogoIcon } from './Icons';
+import { ShieldIcon, UserIcon, GradientLogoIcon } from './Icons';
+import { UserProfileModal } from './UserProfileModal';
 
 export function Navbar(): JSX.Element {
-  const { role, username, theme, toggleTheme, logout } = useGradient();
+  const { role, username, displayName } = useGradient();
   const location = useLocation();
-  const navigate = useNavigate();
-
-  const handleLogout = (): void => {
-    logout();
-    navigate('/login');
-  };
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const navItems = [
     { to: '/problems', label: 'Problems' },
@@ -31,7 +27,7 @@ export function Navbar(): JSX.Element {
             <NavLink
               key={item.to}
               to={item.to}
-              className={({ isActive }) => 
+              className={({ isActive }) =>
                 `nav-link-btn ${isActive || (item.to === '/problems' && location.pathname.startsWith('/problems/')) ? 'active' : ''}`
               }
             >
@@ -51,32 +47,26 @@ export function Navbar(): JSX.Element {
       </div>
 
       <div className="navbar-right">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="theme-toggle-btn"
-          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          aria-label="Toggle Theme"
-        >
-          {theme === 'dark' ? <SunIcon size={18} /> : <MoonIcon size={18} />}
-        </button>
+        <div className="user-profile-wrapper">
+          <button
+            type="button"
+            className="user-profile-badge user-profile-badge-btn"
+            onClick={() => setIsProfileOpen(prev => !prev)}
+            aria-label="Open profile menu"
+            aria-expanded={isProfileOpen}
+          >
+            {role === 'admin' ? (
+              <ShieldIcon size={16} className="role-icon admin-color" />
+            ) : (
+              <UserIcon size={16} className="role-icon student-color" />
+            )}
+            <span className="username-text">{displayName || username}</span>
+          </button>
 
-        <div className="user-profile-badge">
-          {role === 'admin' ? (
-            <ShieldIcon size={16} className="role-icon admin-color" />
-          ) : (
-            <UserIcon size={16} className="role-icon student-color" />
+          {isProfileOpen && (
+            <UserProfileModal onClose={() => setIsProfileOpen(false)} />
           )}
-          <span className="username-text">{username}</span>
         </div>
-
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="btn btn-secondary btn-sm"
-        >
-          Logout
-        </button>
       </div>
     </header>
   );

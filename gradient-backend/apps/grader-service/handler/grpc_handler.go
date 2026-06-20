@@ -84,6 +84,9 @@ func (h *GraderHandler) Grade(ctx context.Context, req *pb.GradeRequest) (*pb.Gr
 	// 5. แปลงผลลัพธ์ sandbox → SubmissionStatus
 	status := judgeStatus(result)
 
+	log.Printf("[Grader Log] Executed sandbox code result for submission %s:\n  - ExitCode: %d\n  - IsTLE: %t\n  - Stdout: %q\n  - Stderr: %q",
+		req.SubmissionId, result.ExitCode, result.IsTLE, result.Stdout, result.Stderr)
+
 	// 6. บันทึกผลกลับ DB
 	if repoErr := h.subRepo.UpdateResult(ctx, req.SubmissionId, repository.UpdateResultParams{
 		Status:     status,

@@ -24,6 +24,8 @@ func RegisterContestRoutes(apiGroup *gin.RouterGroup, contestH *contestHandler.C
 		teacherOrAdmin.Use(middleware.RequireRole(model.RoleTeacher, model.RoleAdmin))
 		{
 			teacherOrAdmin.POST("", contestH.Create)
+			teacherOrAdmin.PUT("/:id", contestH.Update)
+			teacherOrAdmin.DELETE("/:id", contestH.Delete)
 			teacherOrAdmin.POST("/:id/problems", contestH.AddProblem)
 		}
 	}

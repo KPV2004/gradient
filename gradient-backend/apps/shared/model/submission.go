@@ -33,4 +33,7 @@ type Submission struct {
 	Stderr        string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
+
+	// Joined field (not persisted in submissions table)
+	Username      string `gorm:"-"`
 }

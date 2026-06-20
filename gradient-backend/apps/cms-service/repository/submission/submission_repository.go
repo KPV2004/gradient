@@ -38,7 +38,12 @@ func (r *postgresSubmissionRepository) Create(ctx context.Context, s *model.Subm
 
 func (r *postgresSubmissionRepository) GetByID(ctx context.Context, id string) (*model.Submission, error) {
 	var s model.Submission
-	if err := r.db.WithContext(ctx).First(&s, "id = ?", id).Error; err != nil {
+	err := r.db.WithContext(ctx).Table("submissions").
+		Select("submissions.*, users.username AS username").
+		Joins("LEFT JOIN users ON submissions.user_id = users.id").
+		Where("submissions.id = ?", id).
+		First(&s).Error
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrSubmissionNotFound
 		}
@@ -49,14 +54,17 @@ func (r *postgresSubmissionRepository) GetByID(ctx context.Context, id string) (
 
 func (r *postgresSubmissionRepository) List(ctx context.Context, userID, problemID string) ([]*model.Submission, error) {
 	var submissions []*model.Submission
-	tx := r.db.WithContext(ctx)
+	tx := r.db.WithContext(ctx).Table("submissions").
+		Select("submissions.*, users.username AS username").
+		Joins("LEFT JOIN users ON submissions.user_id = users.id")
+
 	if userID != "" {
-		tx = tx.Where("user_id = ?", userID)
+		tx = tx.Where("submissions.user_id = ?", userID)
 	}
 	if problemID != "" {
-		tx = tx.Where("problem_id = ?", problemID)
+		tx = tx.Where("submissions.problem_id = ?", problemID)
 	}
-	if err := tx.Order("created_at DESC").Find(&submissions).Error; err != nil {
+	if err := tx.Order("submissions.created_at DESC").Find(&submissions).Error; err != nil {
 		return nil, fmt.Errorf("failed to list submissions: %w", err)
 	}
 	return submissions, nil

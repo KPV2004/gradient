@@ -26,6 +26,8 @@ type ContestRepository interface {
 	Create(ctx context.Context, c *model.Contest) error
 	GetByID(ctx context.Context, id string) (*model.Contest, error)
 	List(ctx context.Context) ([]*model.Contest, error)
+	Update(ctx context.Context, c *model.Contest) error
+	Delete(ctx context.Context, id string) error
 	Join(ctx context.Context, contestID, userID string) error
 	AddProblem(ctx context.Context, cp *model.ContestProblem) error
 	GetProblems(ctx context.Context, contestID string) ([]*ContestProblemDetail, error)
@@ -162,4 +164,18 @@ func (r *postgresContestRepository) IsParticipant(ctx context.Context, contestID
 		return false, err
 	}
 	return exists, nil
+}
+
+func (r *postgresContestRepository) Update(ctx context.Context, c *model.Contest) error {
+	if err := r.db.WithContext(ctx).Save(c).Error; err != nil {
+		return fmt.Errorf("failed to update contest: %w", err)
+	}
+	return nil
+}
+
+func (r *postgresContestRepository) Delete(ctx context.Context, id string) error {
+	if err := r.db.WithContext(ctx).Delete(&model.Contest{}, "id = ?", id).Error; err != nil {
+		return fmt.Errorf("failed to delete contest: %w", err)
+	}
+	return nil
 }
