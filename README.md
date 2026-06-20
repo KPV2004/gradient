@@ -80,6 +80,20 @@
    ```
 
 #### 2. ฝั่งระบบหน้าบ้าน (Frontend)
+คุณสามารถเลือกรันฝั่งหน้าบ้านได้ 2 วิธี:
+
+**วิธีที่ A: รันผ่าน Docker Compose (แนะนำ)**
+1. เข้าไปในโฟลเดอร์ [gradient-frontend](file:///Users/kong/Documents/Project/gradient/gradient-frontend):
+   ```bash
+   cd gradient-frontend
+   ```
+2. สั่งรันระบบผ่าน Docker Compose:
+   ```bash
+   docker-compose up --build
+   ```
+   *ระบบส่วนหน้าจะพร้อมใช้งานที่: `http://localhost:5173`*
+
+**วิธีที่ B: รันแบบพัฒนาปกติ (Local Node)**
 1. เข้าไปในโฟลเดอร์ [gradient-frontend](file:///Users/kong/Documents/Project/gradient/gradient-frontend):
    ```bash
    cd gradient-frontend
@@ -89,7 +103,7 @@
    npm install
    npm run dev
    ```
-   *ระบบส่วนหน้าจะรันที่พอร์ตพัฒนาเริ่มต้น (ปกติคือ `http://localhost:5173`)*
+   *ระบบส่วนหน้าจะรันที่พอร์ตพัฒนาเริ่มต้น: `http://localhost:5173`*
 
 ---
 
