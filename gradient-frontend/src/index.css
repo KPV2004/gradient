@@ -3296,22 +3296,22 @@ p {
 
 .user-profile-badge-btn {
   background: none;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   cursor: pointer;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius);
   padding: 6px 12px;
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--text-primary);
+  color: var(--text-h);
   transition: background 0.15s, border-color 0.15s;
   font-size: 0.875rem;
   font-weight: 500;
 }
 
 .user-profile-badge-btn:hover {
-  background: var(--surface-hover);
-  border-color: var(--border-active);
+  background: var(--row-hover-bg);
+  border-color: var(--accent);
 }
 
 .user-profile-wrapper {
@@ -3331,9 +3331,9 @@ p {
   top: calc(100% + 12px);
   right: 0;
   width: 300px;
-  background: var(--surface-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   box-shadow:
     0 0 0 1px rgba(0,0,0,0.06),
     0 4px 6px rgba(0,0,0,0.07),
@@ -3354,8 +3354,8 @@ p {
   gap: 12px;
   padding: 16px;
   position: relative;
-  background: var(--surface-elevated, var(--surface-card));
-  border-bottom: 1px solid var(--border-color);
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
 }
 
 .profile-role-badge {
@@ -3392,7 +3392,7 @@ p {
 .profile-display-name {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-h);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3400,12 +3400,12 @@ p {
 
 .profile-username {
   font-size: 0.78rem;
-  color: var(--text-muted);
+  color: var(--text);
 }
 
 .profile-email {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3413,7 +3413,7 @@ p {
 
 .profile-dropdown-divider {
   height: 1px;
-  background: var(--border-color);
+  background: var(--border);
   margin: 0;
   opacity: 0.6;
 }
@@ -3428,8 +3428,9 @@ p {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--text-muted);
+  color: var(--text);
   padding: 4px 16px 6px;
+  opacity: 0.6;
 }
 
 .profile-role-row {
@@ -3440,8 +3441,9 @@ p {
 }
 
 .profile-role-label {
-  color: var(--text-muted);
+  color: var(--text);
   font-size: 0.82rem;
+  opacity: 0.7;
 }
 
 .profile-menu-item {
@@ -3453,25 +3455,26 @@ p {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-secondary);
+  color: var(--text);
   font-size: 0.875rem;
   text-align: left;
   transition: background 0.1s, color 0.1s;
   border-radius: 0;
+  font-family: var(--sans);
 }
 
 .profile-menu-item:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
+  background: var(--row-hover-bg);
+  color: var(--text-h);
 }
 
 .profile-menu-item-value {
   margin-left: auto;
   font-size: 0.78rem;
-  color: var(--text-muted);
-  background: var(--surface-hover);
+  color: var(--text);
+  background: var(--code-bg);
   padding: 2px 8px;
-  border-radius: var(--radius-sm);
+  border-radius: calc(var(--radius) / 2);
 }
 
 .profile-menu-item-danger { color: #ef4444; }
