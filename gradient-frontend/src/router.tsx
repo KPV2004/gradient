@@ -3,6 +3,8 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import type { RouteObject } from 'react-router-dom';
 
 import { Layout } from './components/Layout';
+import { Login } from './components/Login';
+import { Register } from './components/Register';
 import { ProblemList } from './components/ProblemList';
 import { ProblemDetail } from './components/ProblemDetail';
 import { ProblemForm } from './components/ProblemForm';
@@ -57,6 +59,14 @@ function ContestsRoute(): JSX.Element {
 }
 
 export const routes: RouteObject[] = [
+  {
+    path: '/login',
+    element: <Login />
+  },
+  {
+    path: '/register',
+    element: <Register />
+  },
   {
     path: '/',
     element: <Layout />,

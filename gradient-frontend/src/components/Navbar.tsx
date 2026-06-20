@@ -4,18 +4,13 @@ import { useGradient } from '../context/GradientContext';
 import { ShieldIcon, UserIcon, SunIcon, MoonIcon, GradientLogoIcon } from './Icons';
 
 export function Navbar(): JSX.Element {
-  const { role, setRole, username, theme, toggleTheme } = useGradient();
-  const navigate = useNavigate();
+  const { role, username, theme, toggleTheme, logout } = useGradient();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const handleRoleChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
-    const value = event.target.value;
-    const newRole = value === 'admin' ? 'admin' : 'student';
-    setRole(newRole);
-    // If we were on admin and switch to student, navigate back to problems
-    if (newRole === 'student' && location.pathname.startsWith('/admin')) {
-      navigate('/problems');
-    }
+  const handleLogout = (): void => {
+    logout();
+    navigate('/login');
   };
 
   const navItems = [
@@ -75,18 +70,13 @@ export function Navbar(): JSX.Element {
           <span className="username-text">{username}</span>
         </div>
 
-        <div className="role-selector-wrapper">
-          <label htmlFor="role-select" className="sr-only">Select Role</label>
-          <select
-            id="role-select"
-            value={role}
-            onChange={handleRoleChange}
-            className={`role-select-dropdown ${role === 'admin' ? 'admin-border' : 'student-border'}`}
-          >
-            <option value="student">Student (User)</option>
-            <option value="admin">Teacher (Admin)</option>
-          </select>
-        </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="btn btn-secondary btn-sm"
+        >
+          Logout
+        </button>
       </div>
     </header>
   );

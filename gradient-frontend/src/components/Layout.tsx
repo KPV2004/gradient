@@ -1,8 +1,16 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 import { Navbar } from './Navbar';
+import { useGradient } from '../context/GradientContext';
 
 export function Layout(): JSX.Element {
+  const { token } = useGradient();
+
+  // Route guard: Redirect to login if user is not authenticated
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
     <>
       <Navbar />
