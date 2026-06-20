@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package grader;
+
+option go_package = "github.com/KPV2004/gradient-backend/apps/shared/proto";
+
+// GraderService รับงานตรวจโค้ดจาก CMS Service
+service GraderService {
+  rpc Grade(GradeRequest) returns (GradeResponse);
+}
+
+message GradeRequest {
+  string submission_id  = 1; // UUID ของ submission
+  string language       = 2; // "cpp", "python", "go"
+  string source_code    = 3; // โค้ดนักเรียน
+  string stdin          = 4; // Input ของ testcase
+  int64  timeout_ms     = 5; // เวลาสูงสุด (ms)
+  int64  memory_limit_mb = 6; // แรมสูงสุด (MB)
+}
+
+message GradeResponse {
+  string submission_id = 1;
+  bool   is_tle        = 2; // Time Limit Exceeded
+  bool   is_mle        = 3; // Memory Limit Exceeded
+  int32  exit_code     = 4;
+  string stdout        = 5;
+  string stderr        = 6;
+}

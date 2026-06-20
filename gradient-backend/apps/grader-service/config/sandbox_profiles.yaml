@@ -1,0 +1,36 @@
+# configs/sandbox_profiles.yaml
+languages:
+  cpp:
+    image: "gcc:13-bookworm"
+    compile_cmd: "g++ solution.cpp -o solution -O3"
+    run_cmd: "./solution"
+
+  python:
+    image: "python:3.11-slim"
+    compile_cmd: "python3 -m py_compile solution.py"
+    run_cmd: "python3 solution.py"
+
+  go:
+    image: "golang:1.22-bookworm"
+    compile_cmd: "go build -o solution solution.go"
+    run_cmd: "./solution"
+
+  java:
+    image: "openjdk:17-slim"
+    compile_cmd: "javac Solution.java"
+    run_cmd: "java Solution"
+
+  c:
+    image: "gcc:13-bookworm"
+    compile_cmd: "gcc solution.c -o solution -O3 -lm"
+    run_cmd: "./solution"
+
+  rust:
+    image: "rust:1.75-slim"
+    compile_cmd: "rustc -O solution.rs -o solution"
+    run_cmd: "./solution"
+
+  javascript:
+    image: "node:20-alpine"
+    compile_cmd: "node --check solution.js"
+    run_cmd: "node solution.js"
