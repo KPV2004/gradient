@@ -259,7 +259,7 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
           problemId: s.ProblemID,
           problemTitle: prob ? prob.title : 'Unknown Problem',
           userId: s.UserID,
-          username: s.UserID === 'u1' ? 'admin_master' : 'user_student',
+          username: s.Username || (s.UserID === 'u1' ? 'admin_master' : 'user_student'),
           language: s.Language,
           sourceCode: s.SourceCode,
           status: mapBackendStatus(s.Status),

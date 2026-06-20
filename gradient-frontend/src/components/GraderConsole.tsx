@@ -13,6 +13,7 @@ interface GraderConsoleProps {
   readonly activeSubmission: Submission | undefined;
   readonly showConsole: boolean;
   readonly onClose: () => void;
+  readonly isSubmitting?: boolean;
 }
 
 interface ParsedTestcase {
@@ -75,7 +76,7 @@ function parseTestcases(stdout: string | undefined): readonly ParsedTestcase[] {
   });
 }
 
-export function GraderConsole({ activeSubmission, showConsole, onClose }: GraderConsoleProps): JSX.Element | null {
+export function GraderConsole({ activeSubmission, showConsole, onClose, isSubmitting = false }: GraderConsoleProps): JSX.Element | null {
   const [consoleTab, setConsoleTab] = useState<'visual' | 'raw'>('visual');
 
   if (!showConsole) return null;
@@ -108,24 +109,18 @@ export function GraderConsole({ activeSubmission, showConsole, onClose }: Grader
       </div>
 
       <div className="console-body">
-        {activeSubmission ? (
+        {activeSubmission || isSubmitting ? (
           <div className="grading-report">
             {/* Overall Grading Header Status Badge and Metrics */}
             <div className="grading-status-row">
               <div className="status-badge-wrapper">
-                <span className={`status-pill ${getStatusBadgeClass(activeSubmission.status)}`}>
-                  {activeSubmission.status === 'Pending' && <span className="spinner" />}
-                  {activeSubmission.status === 'Running' && <span className="spinner running" />}
-                  {activeSubmission.status === 'Accepted' && <CheckCircleIcon size={16} className="mr-1" />}
-                  {activeSubmission.status === 'Wrong Answer' && <XCircleIcon size={16} className="mr-1" />}
-                  {(activeSubmission.status === 'Time Limit Exceeded' || activeSubmission.status === 'Compilation Error') && (
-                    <AlertCircleIcon size={16} className="mr-1" />
-                  )}
-                  {activeSubmission.status}
+                <span className={`status-pill ${isSubmitting ? 'pill-pending' : getStatusBadgeClass(activeSubmission!.status)}`}>
+                  {(isSubmitting || activeSubmission?.status === 'Pending' || activeSubmission?.status === 'Running') && <span className="spinner" />}
+                  {isSubmitting ? 'Submitting' : activeSubmission?.status}
                 </span>
               </div>
               <div className="grading-metrics">
-                {activeSubmission.status !== 'Pending' && activeSubmission.status !== 'Running' && (
+                {activeSubmission && activeSubmission.status !== 'Pending' && activeSubmission.status !== 'Running' && (
                   <>
                     <div className="metric-badge">
                       <AwardIcon size={14} className="mr-1" />
@@ -145,13 +140,15 @@ export function GraderConsole({ activeSubmission, showConsole, onClose }: Grader
             </div>
 
             {/* Spinner or loaders during sandbox compilation/evaluation */}
-            {activeSubmission.status === 'Pending' || activeSubmission.status === 'Running' ? (
+            {isSubmitting || activeSubmission?.status === 'Pending' || activeSubmission?.status === 'Running' ? (
               <div className="console-loader">
                 <div className="wave-loader">
                   <span></span><span></span><span></span>
                 </div>
                 <p className="loader-text">
-                  {activeSubmission.status === 'Pending'
+                  {isSubmitting
+                    ? 'Submitting source code to Grader Service...'
+                    : activeSubmission?.status === 'Pending'
                     ? 'Sending source code to Grader gRPC Service...'
                     : 'Spinning up isolated Docker Sandbox Container...'}
                 </p>
@@ -178,7 +175,7 @@ export function GraderConsole({ activeSubmission, showConsole, onClose }: Grader
 
                 {consoleTab === 'visual' ? (
                   <div className="testcase-visualizer-panel">
-                    {activeSubmission.status === 'Compilation Error' ? (
+                    {activeSubmission?.status === 'Compilation Error' ? (
                       <div className="compilation-error-banner card border-red">
                         <div className="error-title-wrapper text-danger">
                           <AlertCircleIcon size={18} className="mr-1" />
@@ -187,7 +184,7 @@ export function GraderConsole({ activeSubmission, showConsole, onClose }: Grader
                         <p className="error-desc text-muted">
                           Your code failed to compile inside our Docker sandbox compiler. Read the Stderr stream logs in the raw tab to fix syntax errors.
                         </p>
-                        <pre className="error-log-snippet font-mono">{activeSubmission.stderr}</pre>
+                        <pre className="error-log-snippet font-mono">{activeSubmission?.stderr}</pre>
                       </div>
                     ) : (
                       <>
@@ -225,16 +222,16 @@ export function GraderConsole({ activeSubmission, showConsole, onClose }: Grader
                   </div>
                 ) : (
                   <div className="console-output-blocks">
-                    {activeSubmission.stderr && (
+                    {activeSubmission?.stderr && (
                       <div className="output-section">
                         <span className="output-title text-danger">Compilation/Runtime Stderr:</span>
-                        <pre className="output-content error-content font-mono">{activeSubmission.stderr}</pre>
+                        <pre className="output-content error-content font-mono">{activeSubmission?.stderr}</pre>
                       </div>
                     )}
-                    {activeSubmission.stdout && (
+                    {activeSubmission?.stdout && (
                       <div className="output-section">
                         <span className="output-title">Grader Evaluation Verdict (Stdout):</span>
-                        <pre className="output-content success-content font-mono">{activeSubmission.stdout}</pre>
+                        <pre className="output-content success-content font-mono">{activeSubmission?.stdout}</pre>
                       </div>
                     )}
                   </div>
