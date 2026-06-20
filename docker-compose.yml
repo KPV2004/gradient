@@ -14,6 +14,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # โหลด schema.sql เริ่มต้นเพื่อสร้างตารางให้อัตโนมัติเมื่อรันครั้งแรก (ปรับพาทให้ชี้ไปยังโฟลเดอร์ของ backend)
       - ./gradient-backend/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     networks:
       - gradient_network
@@ -38,6 +39,8 @@ services:
     ports:
       - "8081:8081"
     volumes:
+      # 🛡️ เชื่อมต่อ Docker Socket เพื่อให้ Grader ที่รันใน Container สามารถควบคุม Docker Host
+      # ในการสั่งสร้าง Docker Sandbox เพื่อคอมไพล์และรันโค้ดได้ (Docker-out-of-Docker)
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - db
@@ -84,7 +87,7 @@ services:
       - ./gradient-frontend:/app
       - /app/node_modules
     environment:
-      - VITE_API_URL=http://localhost:8080
+      - VITE_API_URL=http://cms-service:8080
     depends_on:
       - cms-service
     networks:

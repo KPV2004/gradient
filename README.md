@@ -125,7 +125,7 @@
 *   **C** (GCC 13 / `gcc:13-bookworm`)
 *   **C++** (GCC 14 / `gcc:14-bookworm`)
 *   **Go** (Golang 1.22 / `golang:1.22-bookworm`)
-*   **Java** (OpenJDK 17 / `openjdk:17-slim`)
+*   **Java** (Eclipse Temurin 17 / `eclipse-temurin:17-jdk-alpine`)
 *   **Python** (Python 3.11 / `python:3.11-slim`)
 *   **Rust** (Rust 1.75 / `rust:1.75-slim`)
 *   **JavaScript** (Node 20 / `node:20-alpine`)

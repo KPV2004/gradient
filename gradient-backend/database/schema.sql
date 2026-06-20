@@ -92,8 +92,8 @@ CREATE TABLE IF NOT EXISTS submissions (
 
 -- Seed default users
 INSERT INTO users (id, username, email, password_hash, display_name, role) VALUES
-('u1', 'admin_master', 'admin@gradient.com', '$2a$10$ZDD.4rkP1dqg1bXkwIr7vOE2VoFEeJfLCB808jmBVaZulTnFliSNa', 'Admin Master', 'admin'),
-('u4', 'user_student', 'student@gradient.com', '$2a$10$uf7kr2lOo.9KhS00A/Epwu019pYEOcjxLg3VxIX3EVEWCa1LI37iK', 'User Student', 'student')
+('u1', 'admin_master', 'admin@gradient.com', '$2a$10$Z5A3w1VYy0p8p2IbtZnOuuKZ/gheHBnXmuuADSMVMVUbqMDs33wdu', 'Admin Master', 'admin'),
+('u4', 'user_student', 'student@gradient.com', '$2a$10$HNyLLbycmPM0bRlXWb1OwuyQN1XsByiGUXNjNsbjWefKeOsk4nbjO', 'User Student', 'student')
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed default problems
