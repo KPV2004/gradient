@@ -13,4 +13,4 @@ fi
 
 # Run docker compose up
 echo "📦 Running Docker Compose (Database, Backend, Grader & Frontend)..."
-docker compose up --build
+docker compose up -d --build

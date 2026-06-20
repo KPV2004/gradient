@@ -16,7 +16,7 @@ languages:
     run_cmd: "./solution"
 
   java:
-    image: "openjdk:17-slim"
+    image: "eclipse-temurin:17-jdk-alpine"
     compile_cmd: "javac Solution.java"
     run_cmd: "java Solution"
 
