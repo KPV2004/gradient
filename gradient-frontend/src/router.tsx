@@ -11,6 +11,7 @@ import { ProblemForm } from './components/ProblemForm';
 import { TestcaseManager } from './components/TestcaseManager';
 import { SubmissionList } from './components/SubmissionList';
 import { ContestList } from './components/ContestList';
+import { ContestDetail } from './components/ContestDetail';
 import { AdminDashboard } from './components/AdminDashboard';
 
 function ProblemsRoute(): JSX.Element {
@@ -28,7 +29,21 @@ function ProblemsRoute(): JSX.Element {
 function ProblemDetailRoute(): JSX.Element {
   const { id } = useParams<{ readonly id: string }>();
   const navigate = useNavigate();
-  return <ProblemDetail problemId={id ?? ''} onBack={() => navigate('/problems')} />;
+  
+  const query = new URLSearchParams(window.location.search);
+  const from = query.get('from');
+  
+  const handleBack = () => {
+    if (from === 'contests') {
+      navigate('/contests');
+    } else if (from === 'submissions') {
+      navigate('/submissions');
+    } else {
+      navigate('/problems');
+    }
+  };
+
+  return <ProblemDetail problemId={id ?? ''} onBack={handleBack} />;
 }
 
 function ProblemNewRoute(): JSX.Element {
@@ -50,12 +65,24 @@ function TestcasesRoute(): JSX.Element {
 
 function SubmissionsRoute(): JSX.Element {
   const navigate = useNavigate();
-  return <SubmissionList onSelectProblem={(id) => navigate(`/problems/${id}`)} />;
+  return <SubmissionList onSelectProblem={(id) => navigate(`/problems/${id}?from=submissions`)} />;
 }
 
 function ContestsRoute(): JSX.Element {
   const navigate = useNavigate();
-  return <ContestList onSelectProblem={(id) => navigate(`/problems/${id}`)} />;
+  return <ContestList onEnterContest={(id) => navigate(`/contests/${id}`)} />;
+}
+
+function ContestDetailRoute(): JSX.Element {
+  const { id } = useParams<{ readonly id: string }>();
+  const navigate = useNavigate();
+  return (
+    <ContestDetail
+      contestId={id ?? ''}
+      onBack={() => navigate('/contests')}
+      onSelectProblem={(probId) => navigate(`/problems/${probId}?from=contest-${id}`)}
+    />
+  );
 }
 
 export const routes: RouteObject[] = [
@@ -78,6 +105,7 @@ export const routes: RouteObject[] = [
       { path: 'problems/:id/testcases', element: <TestcasesRoute /> },
       { path: 'submissions', element: <SubmissionsRoute /> },
       { path: 'contests', element: <ContestsRoute /> },
+      { path: 'contests/:id', element: <ContestDetailRoute /> },
       { path: 'admin', element: <AdminDashboard /> },
       { path: '', element: <Navigate to="/problems" replace /> }
     ]

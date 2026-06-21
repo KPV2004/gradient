@@ -108,6 +108,29 @@ func (h *ContestHandler) Join(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "joined contest successfully"})
 }
 
+func (h *ContestHandler) GetParticipants(c *gin.Context) {
+	contestID := c.Param("id")
+
+	// Validate contest exists
+	_, err := h.repo.GetByID(c.Request.Context(), contestID)
+	if err != nil {
+		if errors.Is(err, contestRepo.ErrContestNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "contest not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	participants, err := h.repo.GetParticipants(c.Request.Context(), contestID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, participants)
+}
+
 type AddProblemRequest struct {
 	ProblemID  string `json:"problem_id" binding:"required"`
 	Label      string `json:"label" binding:"required"`
