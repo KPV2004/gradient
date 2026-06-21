@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useGradient } from '../context/GradientContext';
-import { ShieldIcon, UserIcon, GradientLogoIcon } from './Icons';
+import { ShieldIcon, UserIcon, BookOpenIcon, GradientLogoIcon } from './Icons';
 import { UserProfileModal } from './UserProfileModal';
 
 export function Navbar(): JSX.Element {
@@ -57,6 +57,8 @@ export function Navbar(): JSX.Element {
           >
             {role === 'admin' ? (
               <ShieldIcon size={16} className="role-icon admin-color" />
+            ) : role === 'teacher' ? (
+              <BookOpenIcon size={16} className="role-icon teacher-color" />
             ) : (
               <UserIcon size={16} className="role-icon student-color" />
             )}

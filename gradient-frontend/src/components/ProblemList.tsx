@@ -43,7 +43,7 @@ export function ProblemList({
   };
 
   // Solved stats
-  const publishedProblems = problems.filter(p => role === 'admin' ? true : p.isPublished);
+  const publishedProblems = problems.filter(p => (role === 'admin' || role === 'teacher') ? true : p.isPublished);
   const easyProbs = publishedProblems.filter(p => p.difficulty === 'Easy');
   const mediumProbs = publishedProblems.filter(p => p.difficulty === 'Medium');
   const hardProbs = publishedProblems.filter(p => p.difficulty === 'Hard');
@@ -100,7 +100,7 @@ export function ProblemList({
     "Title",
     "Difficulty",
     "Score",
-    ...(role === 'admin' ? ["Published"] : []),
+    ...((role === 'admin' || role === 'teacher') ? ["Published"] : []),
     "Actions"
   ];
 
@@ -109,7 +109,7 @@ export function ProblemList({
     "col-title",
     "col-difficulty",
     "col-score",
-    ...(role === 'admin' ? ["col-published"] : []),
+    ...((role === 'admin' || role === 'teacher') ? ["col-published"] : []),
     "col-actions"
   ];
 
@@ -118,7 +118,7 @@ export function ProblemList({
     "left",
     "left",
     "center",
-    ...(role === 'admin' ? ["center" as const] : []),
+    ...((role === 'admin' || role === 'teacher') ? ["center" as const] : []),
     "right"
   ];
 
@@ -147,7 +147,7 @@ export function ProblemList({
       <span key={`score-${prob.id}`} className="font-mono">
         {prob.score}
       </span>,
-      ...(role === 'admin' ? [
+      ...((role === 'admin' || role === 'teacher') ? [
         <div key={`pub-${prob.id}`} className="text-center">
           <TableActionButton
             type={prob.isPublished ? 'unpublish' : 'publish'}
@@ -157,7 +157,7 @@ export function ProblemList({
         </div>
       ] : []),
       <div key={`actions-${prob.id}`}>
-        {role === 'admin' ? (
+        {(role === 'admin' || role === 'teacher') ? (
           <div className="admin-actions-group">
             <TableActionButton
               type="database"
@@ -266,12 +266,12 @@ export function ProblemList({
         <div>
           <h1 className="section-title">Coding Challenges</h1>
           <p className="section-subtitle">
-            {role === 'admin' 
+            {(role === 'admin' || role === 'teacher') 
               ? 'Manage public and private problem definitions and testcases.' 
               : 'Choose a problem, write code, and submit it for real-time sandbox verification.'}
           </p>
         </div>
-        {role === 'admin' && (
+        {(role === 'admin' || role === 'teacher') && (
           <button
             type="button"
             className="btn btn-primary btn-icon"

@@ -35,5 +35,5 @@ type Submission struct {
 	UpdatedAt     time.Time
 
 	// Joined field (not persisted in submissions table)
-	Username      string `gorm:"-"`
+	Username      string `gorm:"->"`
 }

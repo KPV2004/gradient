@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGradient } from '../context/GradientContext';
-import { UserIcon, ShieldIcon, SunIcon, MoonIcon, LogoutIcon } from './Icons';
+import { UserIcon, ShieldIcon, BookOpenIcon, SunIcon, MoonIcon, LogoutIcon } from './Icons';
 
 interface UserProfileModalProps {
   readonly onClose: () => void;
@@ -40,15 +40,15 @@ export function UserProfileModal({ onClose }: UserProfileModalProps): JSX.Elemen
         {/* Header */}
         <div className="profile-dropdown-header">
           <div className="profile-avatar">
-            {role === 'admin' ? <ShieldIcon size={20} /> : <UserIcon size={20} />}
+            {role === 'admin' ? <ShieldIcon size={20} /> : role === 'teacher' ? <BookOpenIcon size={20} /> : <UserIcon size={20} />}
           </div>
           <div className="profile-info">
             <span className="profile-display-name">{displayName || username}</span>
             <span className="profile-username">@{username}</span>
             {email && <span className="profile-email">{email}</span>}
           </div>
-          <span className={`profile-role-badge ${role === 'admin' ? 'badge-admin' : 'badge-student'}`}>
-            {role === 'admin' ? 'Admin' : 'Student'}
+          <span className={`profile-role-badge ${role === 'admin' ? 'badge-admin' : role === 'teacher' ? 'badge-teacher' : 'badge-student'}`}>
+            {role === 'admin' ? 'Admin' : role === 'teacher' ? 'Teacher' : 'Student'}
           </span>
         </div>
 

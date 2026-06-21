@@ -18,6 +18,7 @@ func RegisterContestRoutes(apiGroup *gin.RouterGroup, contestH *contestHandler.C
 		contestsGroup.GET("/:id", contestH.GetByID)
 		contestsGroup.POST("/:id/join", contestH.Join)
 		contestsGroup.GET("/:id/problems", contestH.GetProblems)
+		contestsGroup.GET("/:id/participants", contestH.GetParticipants)
 
 		// เฉพาะผู้ที่มีสิทธิ์ระดับ Teacher หรือ Admin เท่านั้น
 		teacherOrAdmin := contestsGroup.Group("")

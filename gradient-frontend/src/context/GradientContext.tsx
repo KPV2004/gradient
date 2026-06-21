@@ -82,6 +82,8 @@ interface GradientContextType {
   readonly addTestcase: (problemId: string, testcase: Omit<Testcase, 'id' | 'problemId' | 'orderIndex'>) => void;
   readonly deleteTestcase: (id: string) => Promise<void>;
   readonly addContest: (contest: Omit<Contest, 'id' | 'createdBy' | 'participants'>) => void;
+  readonly updateContest: (id: string, updates: Omit<Contest, 'id' | 'createdBy' | 'participants'>) => Promise<void>;
+  readonly deleteContest: (id: string) => Promise<void>;
   readonly joinContest: (contestId: string) => void;
   readonly submitCode: (problemId: string, language: string, sourceCode: string) => Promise<string>;
   readonly regradeSubmission: (submissionId: string) => void;
@@ -243,9 +245,50 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
       for (const contest of mappedContests) {
         try {
           const contestProbs = await apiFetch(`/api/contests/${contest.id}/problems`, tokenToUse);
-          (contest as any).problems = contestProbs.map((p: any) => p.ID);
+          const newContestProblems = contestProbs.map((p: any) => {
+            const probObj = p.Problem;
+            if (probObj) {
+              const mappedProb: Problem = {
+                id: probObj.ID,
+                title: probObj.Title,
+                slug: probObj.Slug,
+                description: probObj.Description,
+                inputFormat: probObj.InputFormat || '',
+                outputFormat: probObj.OutputFormat || '',
+                constraints: probObj.Constraints || '',
+                difficulty: probObj.Difficulty === 'easy' ? 'Easy' : probObj.Difficulty === 'medium' ? 'Medium' : 'Hard',
+                timeoutMs: probObj.TimeoutMs,
+                memoryLimitMb: probObj.MemoryLimitMb,
+                score: probObj.Score,
+                isPublished: probObj.IsPublished,
+                createdBy: probObj.CreatedBy,
+                createdAt: probObj.CreatedAt,
+                tags: probObj.Slug === 'two-sum' ? ['Array', 'Hash Table'] : 
+                      probObj.Slug === 'valid-parentheses' ? ['String', 'Stack'] : 
+                      probObj.Slug === 'longest-substring-without-repeating' ? ['String', 'Sliding Window'] : 
+                      probObj.Slug === 'optimal-path-finder' ? ['Graph', 'Shortest Path'] : []
+              };
+              
+              setProblems(prev => {
+                if (prev.some(x => x.id === mappedProb.id)) return prev;
+                return [...prev, mappedProb];
+              });
+              
+              return mappedProb.id;
+            }
+            return p.ID || p.id || '';
+          });
+          (contest as any).problems = newContestProblems;
         } catch (e) {
           console.error('Failed to load contest problems', e);
+        }
+
+        try {
+          const participants = await apiFetch(`/api/contests/${contest.id}/participants`, tokenToUse);
+          (contest as any).participants = participants;
+        } catch (e) {
+          console.error('Failed to load contest participants', e);
+          (contest as any).participants = [];
         }
       }
       setContests(mappedContests);
@@ -599,6 +642,72 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
     }
   };
 
+  const updateContest = async (
+    contestId: string,
+    updatedContest: Omit<Contest, 'id' | 'createdBy' | 'participants'>
+  ): Promise<void> => {
+    try {
+      const res = await apiFetch(`/api/contests/${contestId}`, token, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: updatedContest.title,
+          description: updatedContest.description,
+          start_time: updatedContest.startTime,
+          end_time: updatedContest.endTime,
+          is_public: updatedContest.isPublic
+        })
+      });
+
+      for (let idx = 0; idx < updatedContest.problems.length; idx++) {
+        const probId = updatedContest.problems[idx];
+        try {
+          await apiFetch(`/api/contests/${contestId}/problems`, token, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              problem_id: probId,
+              label: String.fromCharCode(65 + idx),
+              order_index: idx
+            })
+          });
+        } catch (e) {
+          console.error(`Failed to map problem ${probId} to contest during update:`, e);
+        }
+      }
+
+      setContests(prev => prev.map(c => {
+        if (c.id === contestId) {
+          return {
+            ...c,
+            title: res.Title || updatedContest.title,
+            description: res.Description || updatedContest.description,
+            startTime: res.StartTime || updatedContest.startTime,
+            endTime: res.EndTime || updatedContest.endTime,
+            isPublic: res.IsPublic !== undefined ? res.IsPublic : updatedContest.isPublic,
+            problems: updatedContest.problems
+          };
+        }
+        return c;
+      }));
+    } catch (e) {
+      console.error('Failed to update contest:', e);
+      throw e;
+    }
+  };
+
+  const deleteContest = async (contestId: string): Promise<void> => {
+    try {
+      await apiFetch(`/api/contests/${contestId}`, token, {
+        method: 'DELETE'
+      });
+      setContests(prev => prev.filter(c => c.id !== contestId));
+    } catch (e) {
+      console.error('Failed to delete contest:', e);
+      throw e;
+    }
+  };
+
   // Poll submission status in real-time
   const pollSubmission = (subId: string) => {
     let attempts = 0;
@@ -697,6 +806,8 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
       addTestcase,
       deleteTestcase,
       addContest,
+      updateContest,
+      deleteContest,
       joinContest,
       submitCode,
       regradeSubmission,

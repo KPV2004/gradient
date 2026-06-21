@@ -38,7 +38,7 @@ export function SubmissionList({ onSelectProblem }: SubmissionListProps): JSX.El
   const headers = [
     "Sub ID",
     "Problem",
-    ...(role === 'admin' ? ["User"] : []),
+    ...(role === 'admin' || role === 'teacher' ? ["User"] : []),
     "Language",
     "Verdict",
     "Score",
@@ -51,7 +51,7 @@ export function SubmissionList({ onSelectProblem }: SubmissionListProps): JSX.El
   const columnClasses = [
     "col-sub-id",
     "col-sub-prob",
-    ...(role === 'admin' ? ["col-sub-user"] : []),
+    ...(role === 'admin' || role === 'teacher' ? ["col-sub-user"] : []),
     "col-sub-lang",
     "col-sub-verdict",
     "col-sub-score",
@@ -64,7 +64,7 @@ export function SubmissionList({ onSelectProblem }: SubmissionListProps): JSX.El
   const columnAlignments: ('left' | 'center' | 'right')[] = [
     "left",
     "left",
-    ...(role === 'admin' ? ["left" as const] : []),
+    ...(role === 'admin' || role === 'teacher' ? ["left" as const] : []),
     "left",
     "left",
     "center",
@@ -82,7 +82,7 @@ export function SubmissionList({ onSelectProblem }: SubmissionListProps): JSX.El
       value: searchProblem,
       onChange: setSearchProblem,
     },
-    ...(role === 'admin' ? [
+    ...(role === 'admin' || role === 'teacher' ? [
       {
         type: 'text' as const,
         placeholder: 'Search User...',
@@ -120,7 +120,7 @@ export function SubmissionList({ onSelectProblem }: SubmissionListProps): JSX.El
     >
       {sub.problemTitle}
     </span>,
-    ...(role === 'admin' ? [
+    ...(role === 'admin' || role === 'teacher' ? [
       <span key={`user-${sub.id}`} className="font-medium">
         {sub.username}
       </span>
@@ -147,7 +147,7 @@ export function SubmissionList({ onSelectProblem }: SubmissionListProps): JSX.El
         onClick={() => setSelectedSub(sub)}
         title="Inspect Code"
       />
-      {role === 'admin' && (
+      {(role === 'admin' || role === 'teacher') && (
         <TableActionButton
           type="regrade"
           onClick={() => regradeSubmission(sub.id)}
@@ -166,7 +166,7 @@ export function SubmissionList({ onSelectProblem }: SubmissionListProps): JSX.El
         <div>
           <h1 className="section-title">Submissions</h1>
           <p className="section-subtitle">
-            {role === 'admin'
+            {role === 'admin' || role === 'teacher'
               ? 'Global real-time compiler sandboxed grading queue.'
               : 'Review your submission history, execution times, memory usage, and logic verdicts.'}
           </p>

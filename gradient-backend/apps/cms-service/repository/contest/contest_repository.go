@@ -32,6 +32,7 @@ type ContestRepository interface {
 	AddProblem(ctx context.Context, cp *model.ContestProblem) error
 	GetProblems(ctx context.Context, contestID string) ([]*ContestProblemDetail, error)
 	IsParticipant(ctx context.Context, contestID, userID string) (bool, error)
+	GetParticipants(ctx context.Context, contestID string) ([]string, error)
 }
 
 type postgresContestRepository struct {
@@ -164,6 +165,24 @@ func (r *postgresContestRepository) IsParticipant(ctx context.Context, contestID
 		return false, err
 	}
 	return exists, nil
+}
+
+func (r *postgresContestRepository) GetParticipants(ctx context.Context, contestID string) ([]string, error) {
+	var usernames []string
+	query := `
+		SELECT u.username 
+		FROM contest_participants cp
+		JOIN users u ON cp.user_id = u.id
+		WHERE cp.contest_id = ?
+		ORDER BY cp.joined_at ASC
+	`
+	if err := r.db.WithContext(ctx).Raw(query, contestID).Scan(&usernames).Error; err != nil {
+		return nil, fmt.Errorf("failed to get contest participants: %w", err)
+	}
+	if usernames == nil {
+		usernames = []string{}
+	}
+	return usernames, nil
 }
 
 func (r *postgresContestRepository) Update(ctx context.Context, c *model.Contest) error {
