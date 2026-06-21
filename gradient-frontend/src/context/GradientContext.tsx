@@ -58,7 +58,7 @@ export interface Submission {
   readonly createdAt: string;
 }
 
-export type UserRole = 'student' | 'admin';
+export type UserRole = 'student' | 'teacher' | 'admin';
 
 interface GradientContextType {
   readonly role: UserRole;
@@ -134,7 +134,7 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
 
   const [role, setRoleState] = useState<UserRole>(() => {
     const saved = localStorage.getItem('gradient_role');
-    return saved === 'admin' || saved === 'student' ? (saved as UserRole) : 'student';
+    return saved === 'admin' || saved === 'student' || saved === 'teacher' ? (saved as UserRole) : 'student';
   });
 
   const [username, setUsernameState] = useState<string>(() => {
@@ -288,7 +288,7 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
     
     const tokenVal = res.token;
     const userVal = res.user;
-    const resolvedRole: UserRole = userVal.role === 'admin' || userVal.role === 'teacher' ? 'admin' : 'student';
+    const resolvedRole: UserRole = (userVal.role === 'admin' || userVal.role === 'teacher' || userVal.role === 'student') ? userVal.role as UserRole : 'student';
     
     localStorage.setItem('gradient_token', tokenVal);
     localStorage.setItem('gradient_role', resolvedRole);

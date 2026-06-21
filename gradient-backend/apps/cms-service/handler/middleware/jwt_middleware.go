@@ -47,6 +47,7 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 
 		userID, ok1 := (*claims)["userID"].(string)
 		roleStr, ok2 := (*claims)["role"].(string)
+		username, _ := (*claims)["username"].(string)
 		if !ok1 || !ok2 {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
 			c.Abort()
@@ -55,6 +56,7 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 
 		// เซ็ตค่าลง Gin Context เพื่อให้ handler ดึงไปใช้ต่อ
 		c.Set("userID", userID)
+		c.Set("username", username)
 		c.Set("userRole", model.Role(roleStr))
 		c.Next()
 	}

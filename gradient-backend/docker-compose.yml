@@ -75,6 +75,18 @@ services:
     networks:
       - gradient_network
 
+  # 4. Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: gradient_prometheus
+    restart: always
+    volumes:
+      - ../prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - gradient_network
+
 volumes:
   postgres_data:
 

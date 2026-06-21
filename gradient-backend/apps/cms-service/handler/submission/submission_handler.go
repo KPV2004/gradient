@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/KPV2004/gradient-backend/apps/cms-service/client"
+	activityRepo "github.com/KPV2004/gradient-backend/apps/cms-service/repository/activity"
 	problemRepo "github.com/KPV2004/gradient-backend/apps/cms-service/repository/problem"
 	subRepo "github.com/KPV2004/gradient-backend/apps/cms-service/repository/submission"
 	"github.com/KPV2004/gradient-backend/apps/shared/model"
@@ -23,17 +24,20 @@ type SubmissionHandler struct {
 	subRepo      subRepo.SubmissionRepository
 	problemRepo  problemRepo.ProblemRepository
 	graderClient *client.GraderClient
+	activityRepo activityRepo.ActivityRepository
 }
 
 func NewSubmissionHandler(
 	subRepo subRepo.SubmissionRepository,
 	problemRepo problemRepo.ProblemRepository,
 	graderClient *client.GraderClient,
+	activityRepo activityRepo.ActivityRepository,
 ) *SubmissionHandler {
 	return &SubmissionHandler{
 		subRepo:      subRepo,
 		problemRepo:  problemRepo,
 		graderClient: graderClient,
+		activityRepo: activityRepo,
 	}
 }
 
@@ -45,6 +49,8 @@ type CreateSubmissionRequest struct {
 
 func (h *SubmissionHandler) Create(c *gin.Context) {
 	userID, _ := c.Get("userID")
+	usernameVal, _ := c.Get("username")
+	username, _ := usernameVal.(string)
 
 	var req CreateSubmissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -88,6 +94,20 @@ func (h *SubmissionHandler) Create(c *gin.Context) {
 
 	// 3. Asynchronously trigger grading
 	go h.gradeSubmission(context.Background(), submission, problem)
+
+	// Log the submit event asynchronously
+	go func() {
+		_ = h.activityRepo.Create(context.Background(), &model.ActivityLog{
+			ID:        uuid.New().String(),
+			UserID:    userID.(string),
+			Username:  username,
+			Action:    "submit",
+			IPAddress: c.ClientIP(),
+			UserAgent: c.Request.UserAgent(),
+			Metadata:  fmt.Sprintf(`{"submission_id":"%s","problem_id":"%s","language":"%s"}`, submission.ID, req.ProblemID, lang),
+			CreatedAt: time.Now(),
+		})
+	}()
 
 	c.JSON(http.StatusCreated, submission)
 }

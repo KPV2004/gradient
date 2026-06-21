@@ -9,6 +9,7 @@ import (
 	"github.com/KPV2004/gradient-backend/apps/grader-service/config"
 	"github.com/KPV2004/gradient-backend/apps/grader-service/engine"
 	"github.com/KPV2004/gradient-backend/apps/grader-service/repository"
+	"github.com/KPV2004/gradient-backend/apps/shared/metrics"
 	"github.com/KPV2004/gradient-backend/apps/shared/model"
 	pb "github.com/KPV2004/gradient-backend/apps/shared/proto"
 )
@@ -67,7 +68,11 @@ func (h *GraderHandler) Grade(ctx context.Context, req *pb.GradeRequest) (*pb.Gr
 		MemoryLimit: req.MemoryLimitMb * 1024 * 1024,
 	}
 
-	// 4. รันโค้ดใน Docker sandbox
+	// 4. รันโค้ดใน Docker sandbox (ponytail: instrument sandbox execution with metrics)
+	metrics.ActiveSandboxes.Inc()
+	defer metrics.ActiveSandboxes.Dec()
+	metrics.SubmissionsTotal.Inc()
+
 	start := time.Now()
 	result, err := h.sandbox.RunCodeWithProfile(ctx, sandboxCfg, req.SourceCode, languageFilename(req.Language))
 	elapsed := time.Since(start).Milliseconds()
