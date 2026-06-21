@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS problems (
     score INT NOT NULL,
     created_by VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,
     is_published BOOLEAN DEFAULT FALSE,
+    tags TEXT DEFAULT '',
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );

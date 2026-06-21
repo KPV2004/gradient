@@ -31,6 +31,7 @@ type CreateProblemRequest struct {
 	MemoryLimitMb int64            `json:"memory_limit_mb" binding:"required,min=4"`
 	Score         int              `json:"score" binding:"required,min=1"`
 	IsPublished   bool             `json:"is_published"`
+	Tags          string           `json:"tags"`
 }
 
 func (h *ProblemHandler) Create(c *gin.Context) {
@@ -56,6 +57,7 @@ func (h *ProblemHandler) Create(c *gin.Context) {
 		Score:         req.Score,
 		CreatedBy:     userID.(string),
 		IsPublished:   req.IsPublished,
+		Tags:          req.Tags,
 	}
 
 	if err := h.repo.Create(c.Request.Context(), p); err != nil {
@@ -187,6 +189,7 @@ type UpdateProblemRequest struct {
 	MemoryLimitMb int64            `json:"memory_limit_mb"`
 	Score         int              `json:"score"`
 	IsPublished   bool             `json:"is_published"`
+	Tags          *string          `json:"tags"`
 }
 
 func (h *ProblemHandler) Update(c *gin.Context) {
@@ -237,6 +240,9 @@ func (h *ProblemHandler) Update(c *gin.Context) {
 	}
 	if req.Score != 0 {
 		p.Score = req.Score
+	}
+	if req.Tags != nil {
+		p.Tags = *req.Tags
 	}
 	p.IsPublished = req.IsPublished
 

@@ -200,10 +200,12 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
         isPublished: p.IsPublished,
         createdBy: p.CreatedBy,
         createdAt: p.CreatedAt,
-        tags: p.Slug === 'two-sum' ? ['Array', 'Hash Table'] : 
-              p.Slug === 'valid-parentheses' ? ['String', 'Stack'] : 
-              p.Slug === 'longest-substring-without-repeating' ? ['String', 'Sliding Window'] : 
-              p.Slug === 'optimal-path-finder' ? ['Graph', 'Shortest Path'] : []
+        tags: p.Tags ? p.Tags.split(',').map((t: string) => t.trim()).filter(Boolean) : (
+          p.Slug === 'two-sum' ? ['Array', 'Hash Table'] : 
+          p.Slug === 'valid-parentheses' ? ['String', 'Stack'] : 
+          p.Slug === 'longest-substring-without-repeating' ? ['String', 'Sliding Window'] : 
+          p.Slug === 'optimal-path-finder' ? ['Graph', 'Shortest Path'] : []
+        )
       }));
       setProblems(mappedProblems);
 
@@ -431,7 +433,8 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
           timeout_ms: newProb.timeoutMs,
           memory_limit_mb: newProb.memoryLimitMb,
           score: newProb.score,
-          is_published: newProb.isPublished
+          is_published: newProb.isPublished,
+          tags: newProb.tags ? newProb.tags.join(',') : ''
         })
       });
       
@@ -450,7 +453,7 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
         isPublished: res.IsPublished,
         createdBy: res.CreatedBy,
         createdAt: res.CreatedAt,
-        tags: newProb.tags
+        tags: res.Tags ? res.Tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []
       };
       setProblems(prev => [...prev, problem]);
 
@@ -507,6 +510,7 @@ export function GradientProvider({ children }: { readonly children: React.ReactN
       if (updates.memoryLimitMb !== undefined) payload.memory_limit_mb = updates.memoryLimitMb;
       if (updates.score !== undefined) payload.score = updates.score;
       if (updates.isPublished !== undefined) payload.is_published = updates.isPublished;
+      if (updates.tags !== undefined) payload.tags = updates.tags.join(',');
       await apiFetch(`/api/problems/${id}`, token, { method: 'PUT', body: JSON.stringify(payload) });
       setProblems(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
     } catch (e) {

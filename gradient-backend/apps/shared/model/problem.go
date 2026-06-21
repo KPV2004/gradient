@@ -27,6 +27,7 @@ type Problem struct {
 	Score           int    // คะแนนเต็มของโจทย์
 	CreatedBy       string // User.ID
 	IsPublished     bool
+	Tags            string     `gorm:"column:tags;type:text"`
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 }

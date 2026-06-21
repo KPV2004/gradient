@@ -24,6 +24,7 @@ export function ProblemForm({ problemId, onSave, onCancel }: ProblemFormProps): 
   const [outputFormat, setOutputFormat] = useState('');
   const [constraints, setConstraints] = useState('');
   const [isPublished, setIsPublished] = useState(false);
+  const [tagsString, setTagsString] = useState('');
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
     title: string;
@@ -54,6 +55,7 @@ export function ProblemForm({ problemId, onSave, onCancel }: ProblemFormProps): 
         setOutputFormat(prob.outputFormat);
         setConstraints(prob.constraints);
         setIsPublished(prob.isPublished);
+        setTagsString(prob.tags ? prob.tags.join(', ') : '');
       }
     }
   }, [problemId, problems]);
@@ -102,7 +104,8 @@ export function ProblemForm({ problemId, onSave, onCancel }: ProblemFormProps): 
       inputFormat,
       outputFormat,
       constraints,
-      isPublished
+      isPublished,
+      tags: tagsString.split(',').map(t => t.trim()).filter(Boolean)
     };
 
     if (problemId) {
@@ -164,6 +167,21 @@ export function ProblemForm({ problemId, onSave, onCancel }: ProblemFormProps): 
                 required
               />
             </div>
+          </div>
+
+          <div className="form-group" style={{ marginTop: '8px', marginBottom: '16px' }}>
+            <label htmlFor="problem-tags" className="form-label">Tags (comma-separated)</label>
+            <input
+              id="problem-tags"
+              type="text"
+              value={tagsString}
+              onChange={(e) => setTagsString(e.target.value)}
+              placeholder="e.g. Array, Hash Table, Dynamic Programming, Greedy"
+              className="form-control"
+            />
+            <p className="form-helper-text" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', margin: '0' }}>
+              Separate tags with commas. E.g. String, Stack, Tree
+            </p>
           </div>
 
           <div className="form-grid-4">

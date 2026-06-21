@@ -31,5 +31,10 @@ func NewDB(dsn string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to auto-migrate: %w", err)
 	}
 
+	// Add tags column to problems if not exists (raw SQL to avoid GORM unique constraint auto-migrate bugs)
+	if err := db.Exec("ALTER TABLE problems ADD COLUMN IF NOT EXISTS tags TEXT DEFAULT ''").Error; err != nil {
+		return nil, fmt.Errorf("failed to add tags column: %w", err)
+	}
+
 	return db, nil
 }
