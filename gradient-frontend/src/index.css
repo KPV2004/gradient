@@ -713,6 +713,28 @@ p {
   color: var(--red);
 }
 
+.btn-table-action.action-publish-draft {
+  color: var(--text);
+  opacity: 0.5;
+}
+
+.btn-table-action.action-publish-draft:hover {
+  background-color: var(--code-bg);
+  border-color: var(--border);
+  color: var(--text-h);
+  opacity: 1;
+}
+
+.btn-table-action.action-publish-active {
+  color: var(--green);
+}
+
+.btn-table-action.action-publish-active:hover {
+  background-color: var(--green-bg);
+  border-color: var(--green-border);
+  color: var(--green);
+}
+
 .btn-table-action:disabled {
   opacity: 0.4;
   cursor: not-allowed;

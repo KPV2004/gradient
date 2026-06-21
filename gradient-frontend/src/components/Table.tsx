@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { EyeIcon, EditIcon, TrashIcon, DatabaseIcon, RefreshCwIcon } from './Icons';
+import { EyeIcon, EyeOffIcon, EditIcon, TrashIcon, DatabaseIcon, RefreshCwIcon } from './Icons';
 
 export interface ColumnFilter {
   readonly type: 'text' | 'select' | 'status' | 'none';
@@ -10,7 +10,7 @@ export interface ColumnFilter {
 }
 
 export interface TableActionButtonProps {
-  readonly type: 'view' | 'edit' | 'delete' | 'database' | 'regrade';
+  readonly type: 'view' | 'edit' | 'delete' | 'database' | 'regrade' | 'publish' | 'unpublish';
   readonly onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   readonly disabled?: boolean;
   readonly title?: string;
@@ -47,6 +47,16 @@ export function TableActionButton({
     case 'regrade':
       icon = <RefreshCwIcon size={14} />;
       defaultTitle = 'Re-run';
+      break;
+    case 'publish':
+      icon = <EyeOffIcon size={14} />;
+      btnClass = 'btn-table-action action-publish-draft';
+      defaultTitle = 'Publish';
+      break;
+    case 'unpublish':
+      icon = <EyeIcon size={14} />;
+      btnClass = 'btn-table-action action-publish-active';
+      defaultTitle = 'Unpublish';
       break;
     default:
       icon = null;
