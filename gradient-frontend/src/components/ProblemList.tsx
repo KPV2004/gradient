@@ -3,13 +3,10 @@ import { useGradient } from '../context/GradientContext';
 import type { Problem } from '../context/GradientContext';
 import { Modal } from './Modal';
 import { Table, TableActionButton } from './Table';
+import { DifficultyBadge, ProblemStatusIcon } from './StatusBadge';
 
 import { 
-  CheckCircleIcon, 
-  XCircleIcon, 
   PlusIcon, 
-  EyeIcon, 
-  EyeOffIcon, 
   BookOpenIcon, 
   TagIcon 
 } from './Icons';
@@ -95,14 +92,7 @@ export function ProblemList({
     deleteProblem(deleteModalConfig.problemId);
   };
 
-  const getDifficultyClass = (diff: Problem['difficulty']): string => {
-    switch (diff) {
-      case 'Easy': return 'diff-easy';
-      case 'Medium': return 'diff-medium';
-      case 'Hard': return 'diff-hard';
-      default: return '';
-    }
-  };
+
 
   // Table configurations
   const headers = [
@@ -136,21 +126,7 @@ export function ProblemList({
     const status = getProblemStatus(prob.id);
     return [
       ...(role === 'student' ? [
-        <span key={`status-${prob.id}`}>
-          {status === 'solved' && (
-            <span className="status-indicator solved" title="Solved">
-              <CheckCircleIcon size={18} />
-            </span>
-          )}
-          {status === 'failed' && (
-            <span className="status-indicator failed" title="Attempted but incorrect">
-              <XCircleIcon size={18} />
-            </span>
-          )}
-          {status === 'unattempted' && (
-            <span className="status-indicator unattempted">-</span>
-          )}
-        </span>
+        <ProblemStatusIcon key={`status-${prob.id}`} status={status} />
       ] : []),
       <div key={`title-${prob.id}`}>
         <div className="problem-title-cell" onClick={() => onSelectProblem(prob.id)}>
@@ -167,22 +143,17 @@ export function ProblemList({
           </div>
         )}
       </div>,
-      <span key={`diff-${prob.id}`} className={`badge ${getDifficultyClass(prob.difficulty)}`}>
-        {prob.difficulty}
-      </span>,
+      <DifficultyBadge key={`diff-${prob.id}`} difficulty={prob.difficulty} />,
       <span key={`score-${prob.id}`} className="font-mono">
         {prob.score}
       </span>,
       ...(role === 'admin' ? [
         <div key={`pub-${prob.id}`} className="text-center">
-          <button
-            type="button"
-            className={`btn-toggle-publish ${prob.isPublished ? 'published' : 'draft'}`}
+          <TableActionButton
+            type={prob.isPublished ? 'unpublish' : 'publish'}
             onClick={() => publishProblem(prob.id, !prob.isPublished)}
             title={prob.isPublished ? 'Unpublish' : 'Publish'}
-          >
-            {prob.isPublished ? <EyeIcon size={18} /> : <EyeOffIcon size={18} />}
-          </button>
+          />
         </div>
       ] : []),
       <div key={`actions-${prob.id}`}>

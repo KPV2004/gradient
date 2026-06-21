@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useGradient } from '../context/GradientContext';
 import type { Submission } from '../context/GradientContext';
 import { Table, TableActionButton } from './Table';
+import { VerdictBadge } from './StatusBadge';
 
-import { ClockIcon, CpuIcon, CheckCircleIcon, XCircleIcon, AlertCircleIcon } from './Icons';
+import { ClockIcon, CpuIcon } from './Icons';
 
 interface SubmissionListProps {
   readonly onSelectProblem: (problemId: string) => void;
@@ -31,17 +32,7 @@ export function SubmissionList({ onSelectProblem }: SubmissionListProps): JSX.El
     return matchesStatus && matchesProblem && matchesUser && matchesLanguage;
   });
 
-  const getStatusBadgeClass = (status: Submission['status']): string => {
-    switch (status) {
-      case 'Accepted': return 'pill-accepted';
-      case 'Wrong Answer': return 'pill-wrong-answer';
-      case 'Pending': return 'pill-pending';
-      case 'Running': return 'pill-running';
-      case 'Time Limit Exceeded': return 'pill-time-limit-exceeded';
-      case 'Compilation Error': return 'pill-compilation-error';
-      default: return 'pill-grey';
-    }
-  };
+
 
   // Table configurations
   const headers = [
@@ -137,14 +128,7 @@ export function SubmissionList({ onSelectProblem }: SubmissionListProps): JSX.El
     <span key={`lang-${sub.id}`} className="text-capitalize font-mono text-sm">
       {sub.language}
     </span>,
-    <span key={`verdict-${sub.id}`} className={`status-pill ${getStatusBadgeClass(sub.status)}`}>
-      {sub.status === 'Pending' && <span className="spinner" />}
-      {sub.status === 'Running' && <span className="spinner running" />}
-      {sub.status === 'Accepted' && <CheckCircleIcon size={14} className="mr-1" />}
-      {sub.status === 'Wrong Answer' && <XCircleIcon size={14} className="mr-1" />}
-      {(sub.status === 'Time Limit Exceeded' || sub.status === 'Compilation Error') && <AlertCircleIcon size={14} className="mr-1" />}
-      {sub.status}
-    </span>,
+    <VerdictBadge key={`verdict-${sub.id}`} status={sub.status} />,
     <span key={`score-${sub.id}`} className="font-mono font-medium">
       {sub.score}
     </span>,

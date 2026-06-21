@@ -3,6 +3,7 @@ import { useGradient } from '../context/GradientContext';
 import { ShieldIcon, CpuIcon, DatabaseIcon, AlertCircleIcon, UserIcon } from './Icons';
 import { Table, TableActionButton } from './Table';
 import type { ColumnFilter } from './Table';
+import { RoleBadge, ServiceStatusBadge } from './StatusBadge';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -87,13 +88,7 @@ function StatusChip({ status }: { status: string }): JSX.Element {
   return <span className={cls}>{label}</span>;
 }
 
-function RoleBadge({ role }: { role: string }): JSX.Element {
-  let cls = 'adm-role-badge';
-  if (role === 'admin') cls += ' adm-role-admin';
-  else if (role === 'teacher') cls += ' adm-role-teacher';
-  else cls += ' adm-role-student';
-  return <span className={cls}>{role}</span>;
-}
+
 
 function ActionChip({ action }: { action: string }): JSX.Element {
   let cls = 'adm-action-chip';
@@ -423,9 +418,7 @@ export function AdminDashboard(): JSX.Element {
                   <span className="adm-service-detail">{svc.detail}</span>
                 </div>
                 <code className="adm-service-addr">{svc.addr}</code>
-                <span className={`adm-chip ${svc.ok ? 'adm-chip-success' : 'adm-chip-danger'} adm-chip-sm`}>
-                  {svc.ok ? 'Online' : 'Offline'}
-                </span>
+                <ServiceStatusBadge ok={svc.ok} />
               </div>
             ))}
           </div>
