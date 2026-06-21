@@ -2,17 +2,14 @@ import React, { useState } from 'react';
 import { useGradient } from '../context/GradientContext';
 import type { Problem } from '../context/GradientContext';
 import { Modal } from './Modal';
-import { Table } from './Table';
+import { Table, TableActionButton } from './Table';
 
 import { 
   CheckCircleIcon, 
   XCircleIcon, 
   PlusIcon, 
-  TrashIcon, 
-  EditIcon, 
   EyeIcon, 
   EyeOffIcon, 
-  DatabaseIcon, 
   BookOpenIcon, 
   TagIcon 
 } from './Icons';
@@ -191,30 +188,21 @@ export function ProblemList({
       <div key={`actions-${prob.id}`}>
         {role === 'admin' ? (
           <div className="admin-actions-group">
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm btn-square"
+            <TableActionButton
+              type="database"
               onClick={() => onManageTestcases(prob.id)}
               title="Manage Testcases"
-            >
-              <DatabaseIcon size={14} />
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm btn-square"
+            />
+            <TableActionButton
+              type="edit"
               onClick={() => onEditProblem(prob.id)}
               title="Edit Problem"
-            >
-              <EditIcon size={14} />
-            </button>
-            <button
-              type="button"
-              className="btn btn-danger btn-sm btn-square"
+            />
+            <TableActionButton
+              type="delete"
               onClick={() => handleDelete(prob.id, prob.title)}
               title="Delete"
-            >
-              <TrashIcon size={14} />
-            </button>
+            />
           </div>
         ) : (
           <button

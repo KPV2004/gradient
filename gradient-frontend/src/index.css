@@ -676,6 +676,50 @@ p {
   gap: 6px;
 }
 
+/* Premium Table Action Button Redesign */
+.btn-table-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: none;
+}
+
+.btn-table-action:hover {
+  background-color: var(--code-bg);
+  border-color: var(--border);
+  color: var(--text-h);
+}
+
+.btn-table-action:active {
+  transform: scale(0.95);
+}
+
+.btn-table-action.action-delete {
+  color: var(--text);
+}
+
+.btn-table-action.action-delete:hover {
+  background-color: var(--red-bg);
+  border-color: var(--red-border);
+  color: var(--red);
+}
+
+.btn-table-action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: transparent;
+  border-color: transparent;
+}
+
 /* Problem Detail split workspace */
 /* LeetCode-style Split Panel Layout */
 .problem-detail-container {

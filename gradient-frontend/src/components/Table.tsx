@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { EyeIcon, EditIcon, TrashIcon, DatabaseIcon, RefreshCwIcon } from './Icons';
 
 export interface ColumnFilter {
   readonly type: 'text' | 'select' | 'status' | 'none';
@@ -6,6 +7,62 @@ export interface ColumnFilter {
   readonly placeholder?: string;
   readonly value: string;
   readonly onChange: (value: string) => void;
+}
+
+export interface TableActionButtonProps {
+  readonly type: 'view' | 'edit' | 'delete' | 'database' | 'regrade';
+  readonly onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  readonly disabled?: boolean;
+  readonly title?: string;
+}
+
+export function TableActionButton({
+  type,
+  onClick,
+  disabled = false,
+  title,
+}: TableActionButtonProps): JSX.Element {
+  let icon: React.ReactNode;
+  let btnClass = 'btn-table-action';
+  let defaultTitle = '';
+
+  switch (type) {
+    case 'view':
+      icon = <EyeIcon size={14} />;
+      defaultTitle = 'View';
+      break;
+    case 'edit':
+      icon = <EditIcon size={14} />;
+      defaultTitle = 'Edit';
+      break;
+    case 'delete':
+      icon = <TrashIcon size={14} />;
+      btnClass = 'btn-table-action action-delete';
+      defaultTitle = 'Delete';
+      break;
+    case 'database':
+      icon = <DatabaseIcon size={14} />;
+      defaultTitle = 'Manage';
+      break;
+    case 'regrade':
+      icon = <RefreshCwIcon size={14} />;
+      defaultTitle = 'Re-run';
+      break;
+    default:
+      icon = null;
+  }
+
+  return (
+    <button
+      type="button"
+      className={btnClass}
+      onClick={onClick}
+      disabled={disabled}
+      title={title || defaultTitle}
+    >
+      {icon}
+    </button>
+  );
 }
 
 
