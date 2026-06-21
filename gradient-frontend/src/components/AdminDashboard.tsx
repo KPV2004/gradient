@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useGradient } from '../context/GradientContext';
 import { ShieldIcon, CpuIcon, DatabaseIcon, AlertCircleIcon, UserIcon } from './Icons';
-import { Table } from './Table';
+import { Table, TableActionButton } from './Table';
 import type { ColumnFilter } from './Table';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -473,24 +473,20 @@ export function AdminDashboard(): JSX.Element {
                   <RoleBadge role={user.role} key={`role-${user.id}`} />,
                   new Date(user.created_at).toLocaleDateString(),
                   <div className="adm-actions-cell" key={`actions-${user.id}`} style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                    <button
-                      type="button"
-                      className="adm-btn adm-btn-secondary adm-btn-sm"
+                    <TableActionButton
+                      type="edit"
                       onClick={() => {
                         setEditingUser(user);
                         setEditDisplayName(user.display_name);
                         setEditRole(user.role);
                       }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="adm-btn adm-btn-danger adm-btn-sm"
+                      title="Edit User"
+                    />
+                    <TableActionButton
+                      type="delete"
                       onClick={() => handleDeleteUser(user.id, user.username)}
-                    >
-                      Remove
-                    </button>
+                      title="Remove User"
+                    />
                   </div>
                 ])}
                 rowKeys={filteredUsers.map(u => u.id)}
@@ -676,31 +672,31 @@ export function AdminDashboard(): JSX.Element {
             <button type="button" className="modal-close-btn" onClick={() => setEditingUser(null)} aria-label="Close modal">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
-            <div className="modal-content-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ marginBottom: '8px' }}>
-                <h3 className="modal-title-text" style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px 0' }}>Edit User</h3>
-                <p className="modal-message-text" style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: 0 }}>Update details for @{editingUser.username}</p>
+            <div className="modal-content-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'left', alignItems: 'stretch', width: '100%', marginBottom: '20px' }}>
+              <div>
+                <h3 className="modal-title-text" style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-h)', margin: '0 0 4px 0', textAlign: 'left' }}>Edit User</h3>
+                <p className="modal-message-text" style={{ fontSize: '0.875rem', color: 'var(--text)', margin: 0, textAlign: 'left' }}>Update details for @{editingUser.username}</p>
               </div>
               
-              <div className="adm-form-group">
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>Display Name</label>
+              <div className="adm-form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>Display Name</label>
                 <input
                   type="text"
-                  className="adm-search"
-                  style={{ width: '100%', padding: '10px 14px', boxSizing: 'border-box' }}
+                  className="form-control"
                   value={editDisplayName}
                   onChange={e => setEditDisplayName(e.target.value)}
                   placeholder="Enter display name"
+                  style={{ width: '100%' }}
                 />
               </div>
 
-              <div className="adm-form-group">
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>Role</label>
+              <div className="adm-form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>Role</label>
                 <select
-                  className="adm-search"
-                  style={{ width: '100%', padding: '10px 14px', boxSizing: 'border-box', background: 'var(--surface-card)', color: 'var(--text-primary)' }}
+                  className="form-control"
                   value={editRole}
                   onChange={e => setEditRole(e.target.value as any)}
+                  style={{ width: '100%' }}
                 >
                   <option value="student">Student</option>
                   <option value="teacher">Teacher</option>
@@ -708,11 +704,11 @@ export function AdminDashboard(): JSX.Element {
                 </select>
               </div>
 
-              <div className="modal-actions-wrapper" style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '12px' }}>
-                <button type="button" className="adm-btn adm-btn-ghost" onClick={() => setEditingUser(null)}>
+              <div className="modal-actions-wrapper" style={{ marginTop: '8px' }}>
+                <button type="button" className="btn btn-secondary modal-btn-cancel" onClick={() => setEditingUser(null)}>
                   Cancel
                 </button>
-                <button type="button" className="adm-btn adm-btn-primary" onClick={handleSaveEdit} disabled={updatingUser} style={{ background: 'var(--accent-primary)', color: 'white' }}>
+                <button type="button" className="btn btn-primary modal-btn-confirm" onClick={handleSaveEdit} disabled={updatingUser}>
                   {updatingUser ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>

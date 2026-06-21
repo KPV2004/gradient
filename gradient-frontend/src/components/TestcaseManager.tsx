@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGradient } from '../context/GradientContext';
-import { PlusIcon, TrashIcon, CheckCircleIcon, XCircleIcon } from './Icons';
+import { PlusIcon, CheckCircleIcon, XCircleIcon } from './Icons';
+import { TableActionButton } from './Table';
 
 interface TestcaseManagerProps {
   readonly problemId: string;
@@ -102,14 +103,11 @@ export function TestcaseManager({ problemId, onBack }: TestcaseManagerProps): JS
                       ) : (
                         <span className="badge badge-secret">Secret</span>
                       )}
-                      <button
-                        type="button"
-                        className="btn-delete-tc"
+                      <TableActionButton
+                        type="delete"
                         onClick={() => handleDelete(tc.id, idx + 1)}
-                        title="Delete testcase"
-                      >
-                        <TrashIcon size={14} />
-                      </button>
+                        title="Delete Testcase"
+                      />
                     </div>
                   </div>
                   <div className="tc-io-grids">
@@ -127,6 +125,26 @@ export function TestcaseManager({ problemId, onBack }: TestcaseManagerProps): JS
             </div>
           )}
         </div>
+
+        {/* Right Side placeholder when form is hidden */}
+        {!showAddForm && (
+          <div className="add-testcase-panel card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', minHeight: '360px', padding: '40px 24px', borderStyle: 'dashed', borderWidth: '2px', borderColor: 'var(--border)' }}>
+            <div style={{ backgroundColor: 'var(--accent-bg)', color: 'var(--accent)', padding: '16px', borderRadius: '50%', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <PlusIcon size={32} />
+            </div>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-h)', margin: '0 0 8px 0' }}>Configure Testcases</h3>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text)', margin: '0 0 24px 0', maxWidth: '320px', lineHeight: 1.5 }}>
+              Add testcases to verify the correctness of user solutions. Each testcase defines input parameters and the expected output results.
+            </p>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setShowAddForm(true)}
+            >
+              Add Testcase
+            </button>
+          </div>
+        )}
 
         {/* Right Side: Add Testcase Form */}
         {showAddForm && (

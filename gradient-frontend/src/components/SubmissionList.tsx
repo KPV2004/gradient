@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useGradient } from '../context/GradientContext';
 import type { Submission } from '../context/GradientContext';
-import { Table } from './Table';
+import { Table, TableActionButton } from './Table';
 
-import { RefreshCwIcon, EyeIcon, ClockIcon, CpuIcon, CheckCircleIcon, XCircleIcon, AlertCircleIcon } from './Icons';
+import { ClockIcon, CpuIcon, CheckCircleIcon, XCircleIcon, AlertCircleIcon } from './Icons';
 
 interface SubmissionListProps {
   readonly onSelectProblem: (problemId: string) => void;
@@ -158,24 +158,18 @@ export function SubmissionList({ onSelectProblem }: SubmissionListProps): JSX.El
       {new Date(sub.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
     </span>,
     <div key={`actions-${sub.id}`} className="admin-actions-group">
-      <button
-        type="button"
-        className="btn btn-secondary btn-sm btn-square"
+      <TableActionButton
+        type="view"
         onClick={() => setSelectedSub(sub)}
         title="Inspect Code"
-      >
-        <EyeIcon size={14} />
-      </button>
+      />
       {role === 'admin' && (
-        <button
-          type="button"
-          className="btn btn-secondary btn-sm btn-square"
+        <TableActionButton
+          type="regrade"
           onClick={() => regradeSubmission(sub.id)}
           disabled={sub.status === 'Pending' || sub.status === 'Running'}
           title="Re-run Grader Testcases"
-        >
-          <RefreshCwIcon size={14} />
-        </button>
+        />
       )}
     </div>
   ]);
