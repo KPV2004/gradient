@@ -2,11 +2,13 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
 
 	"github.com/KPV2004/gradient-backend/apps/cms-service/config"
+	activityRepo "github.com/KPV2004/gradient-backend/apps/cms-service/repository/activity"
 	authRepo "github.com/KPV2004/gradient-backend/apps/cms-service/repository/auth"
 	"github.com/KPV2004/gradient-backend/apps/shared/model"
 	"github.com/gin-gonic/gin"
@@ -16,14 +18,16 @@ import (
 )
 
 type AuthHandler struct {
-	repo authRepo.UserRepository
-	cfg  *config.Config
+	repo         authRepo.UserRepository
+	activityRepo activityRepo.ActivityRepository
+	cfg          *config.Config
 }
 
-func NewAuthHandler(repo authRepo.UserRepository, cfg *config.Config) *AuthHandler {
+func NewAuthHandler(repo authRepo.UserRepository, activityLog activityRepo.ActivityRepository, cfg *config.Config) *AuthHandler {
 	return &AuthHandler{
-		repo: repo,
-		cfg:  cfg,
+		repo:         repo,
+		activityRepo: activityLog,
+		cfg:          cfg,
 	}
 }
 
@@ -127,9 +131,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	// Generate JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userID": user.ID,
-		"role":   string(user.Role),
-		"exp":    time.Now().Add(h.cfg.JWTExpires).Unix(),
+		"userID":   user.ID,
+		"username": user.Username,
+		"role":     string(user.Role),
+		"exp":      time.Now().Add(h.cfg.JWTExpires).Unix(),
 	})
 
 	tokenString, err := token.SignedString([]byte(h.cfg.JWTSecret))
@@ -137,6 +142,19 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
 		return
 	}
+
+	// Log the login event asynchronously
+	go func() {
+		_ = h.activityRepo.Create(context.Background(), &model.ActivityLog{
+			ID:        uuid.New().String(),
+			UserID:    user.ID,
+			Username:  user.Username,
+			Action:    "login",
+			IPAddress: c.ClientIP(),
+			UserAgent: c.Request.UserAgent(),
+			CreatedAt: time.Now(),
+		})
+	}()
 
 	c.JSON(http.StatusOK, gin.H{
 		"token": tokenString,

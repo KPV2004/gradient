@@ -20,6 +20,9 @@ type UserRepository interface {
 	GetByID(ctx context.Context, id string) (*model.User, error)
 	GetByUsername(ctx context.Context, username string) (*model.User, error)
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
+	List(ctx context.Context) ([]*model.User, error)
+	Update(ctx context.Context, user *model.User) error
+	Delete(ctx context.Context, id string) error
 }
 
 type postgresUserRepository struct {
@@ -68,4 +71,20 @@ func (r *postgresUserRepository) GetByEmail(ctx context.Context, email string) (
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r *postgresUserRepository) List(ctx context.Context) ([]*model.User, error) {
+	var users []*model.User
+	if err := r.db.WithContext(ctx).Order("created_at DESC").Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (r *postgresUserRepository) Update(ctx context.Context, user *model.User) error {
+	return r.db.WithContext(ctx).Save(user).Error
+}
+
+func (r *postgresUserRepository) Delete(ctx context.Context, id string) error {
+	return r.db.WithContext(ctx).Delete(&model.User{}, "id = ?", id).Error
 }

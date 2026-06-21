@@ -5,12 +5,14 @@ import (
 	"context"
 	"log"
 	"net"
+	"net/http"
 
 	"github.com/KPV2004/gradient-backend/apps/grader-service/config"
 	"github.com/KPV2004/gradient-backend/apps/grader-service/engine"
 	"github.com/KPV2004/gradient-backend/apps/grader-service/handler"
 	"github.com/KPV2004/gradient-backend/apps/grader-service/repository"
 	pb "github.com/KPV2004/gradient-backend/apps/shared/proto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 )
 
@@ -56,6 +58,16 @@ func main() {
 	grpcServer := grpc.NewServer()
 	graderHandler := handler.NewGraderHandler(cfg.Profiles, sandbox, subRepo)
 	pb.RegisterGraderServiceServer(grpcServer, graderHandler)
+
+	// Start Prometheus metrics HTTP server (ponytail: quick metrics setup)
+	go func() {
+		mux := http.NewServeMux()
+		mux.Handle("/metrics", promhttp.Handler())
+		log.Println("📊 Grader Metrics listening on :8082")
+		if err := http.ListenAndServe(":8082", mux); err != nil {
+			log.Printf("⚠️  Metrics server error: %v", err)
+		}
+	}()
 
 	// 7. เปิด TCP Listener
 	addr := ":" + cfg.Port

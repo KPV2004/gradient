@@ -4,6 +4,7 @@ package repository
 import (
 	"fmt"
 
+	"github.com/KPV2004/gradient-backend/apps/shared/model"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -23,6 +24,11 @@ func NewDB(dsn string) (*gorm.DB, error) {
 
 	if err := sqlDB.Ping(); err != nil {
 		return nil, fmt.Errorf("unable to ping database: %w", err)
+	}
+
+	// Run migrations (ponytail: automatically migrate tables to avoid missing table errors)
+	if err := db.AutoMigrate(&model.ActivityLog{}); err != nil {
+		return nil, fmt.Errorf("failed to auto-migrate: %w", err)
 	}
 
 	return db, nil

@@ -90,6 +90,21 @@ CREATE TABLE IF NOT EXISTS submissions (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+-- 8. Activity Logs
+CREATE TABLE IF NOT EXISTS activity_logs (
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,
+    username VARCHAR(100),
+    action VARCHAR(50) NOT NULL,  -- 'login', 'register', 'submit'
+    ip_address VARCHAR(50),
+    user_agent TEXT,
+    metadata JSONB,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_user_id ON activity_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_action ON activity_logs(action);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created_at DESC);
+
 -- Seed default users
 INSERT INTO users (id, username, email, password_hash, display_name, role) VALUES
 ('u1', 'admin_master', 'admin@gradient.com', '$2a$10$Z5A3w1VYy0p8p2IbtZnOuuKZ/gheHBnXmuuADSMVMVUbqMDs33wdu', 'Admin Master', 'admin'),

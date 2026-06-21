@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: 'cms-service'
+    static_configs:
+      - targets: ['cms-service:8080']
+
+  - job_name: 'grader-service'
+    static_configs:
+      - targets: ['grader-service:8082']
